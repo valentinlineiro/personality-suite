@@ -1,4 +1,5 @@
 import { Component, computed } from '@angular/core'
+import { RouterLink } from '@angular/router'
 import { LanguageSelectorComponent } from '../../../shared/components/language-selector/language-selector.component'
 import { HabitTemplateService } from '../../habits/services/habit-template.service'
 import { HabitTemplate } from '../../habits/models/habit-template.model'
@@ -8,7 +9,7 @@ import { TemplateFormComponent } from './template-form.component'
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [LanguageSelectorComponent, TemplateFormComponent],
+  imports: [LanguageSelectorComponent, TemplateFormComponent, RouterLink],
   template: `
     <div class="min-h-screen bg-slate-900 pb-24">
       <div class="px-4 pt-8 pb-4 space-y-3">
@@ -41,10 +42,16 @@ import { TemplateFormComponent } from './template-form.component'
                   }
                   <p class="text-xs uppercase tracking-[0.2em] text-slate-600 mt-1">{{ i18n.t('habit_form.type_' + template.habit.type) || template.habit.type }}</p>
                 </div>
-                <button (click)="deleteTemplate(template)"
-                  class="shrink-0 text-slate-500 hover:text-red-400 text-xs px-2 py-1 rounded-lg hover:bg-slate-700 transition-colors">
-                  {{ i18n.t('habit_list.delete') }}
-                </button>
+                <div class="shrink-0 flex items-center gap-1">
+                  <a [routerLink]="['/habits/new']" [queryParams]="{ template: template.key }"
+                    class="text-slate-400 hover:text-white text-xs px-2 py-1 rounded-lg hover:bg-slate-700 transition-colors">
+                    {{ i18n.t('settings_templates.use_template') }}
+                  </a>
+                  <button (click)="deleteTemplate(template)"
+                    class="text-slate-500 hover:text-red-400 text-xs px-2 py-1 rounded-lg hover:bg-slate-700 transition-colors">
+                    {{ i18n.t('habit_list.delete') }}
+                  </button>
+                </div>
               </div>
             }
             @if (customTemplates().length === 0) {

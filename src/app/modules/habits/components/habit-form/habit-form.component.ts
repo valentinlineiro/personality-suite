@@ -214,6 +214,15 @@ export class HabitFormComponent implements OnInit {
         })
         this.selectedType.set(habit.type)
       })
+      return
+    }
+
+    const templateKey = this.route.snapshot.queryParamMap.get('template')
+    if (templateKey) {
+      const template = this.habitTemplateService.templates().find(t => t.key === templateKey)
+      if (template) {
+        this.applyTemplate(template)
+      }
     }
   }
 

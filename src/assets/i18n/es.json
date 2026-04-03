@@ -25,6 +25,7 @@
   },
   "habit_list": {
     "title": "Hábitos",
+    "start_from_template": "Empezar desde plantilla",
     "empty": "Sin hábitos aún. Crea uno para empezar.",
     "new": "+ Nuevo",
     "edit": "Editar",
@@ -104,7 +105,8 @@
     "auto_detect": "Auto detectar",
     "auto_detect_none": "No hay una sugerencia fiable todavía. Prueba con un nombre más descriptivo.",
     "auto_detect_no_secondary": "Ninguna",
-    "auto_detect_applied": "Aplicado: {{primary}} + {{secondary}} ({{confidence}}% de confianza)."
+    "auto_detect_applied": "Aplicado: {{primary}} + {{secondary}} ({{confidence}}% de confianza).",
+    "use_template": "Usar"
   },
   "habit_template": {
     "duolingo": {

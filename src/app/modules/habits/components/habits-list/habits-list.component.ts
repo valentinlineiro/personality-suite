@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core'
 import { RouterLink } from '@angular/router'
 import { HabitsService } from '../../services/habits.service'
+import { HabitTemplateService } from '../../services/habit-template.service'
 import { Habit } from '../../../../core/models/habit.model'
 import { getDimension } from '../../../personality/constants/dimensions'
 import { I18nService } from '../../../../core/i18n/i18n.service'
@@ -24,6 +25,21 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
           </a>
         </div>
       </div>
+
+      <!-- Start from template -->
+      @if (templates().length > 0) {
+        <div class="px-4 mb-5">
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">{{ i18n.t('habit_list.start_from_template') }}</p>
+          <div class="flex flex-wrap gap-2">
+            @for (template of templates(); track template.key) {
+              <a [routerLink]="['/habits/new']" [queryParams]="{ template: template.key }"
+                class="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-colors">
+                {{ template.name }}
+              </a>
+            }
+          </div>
+        </div>
+      }
 
       <!-- Active habits -->
       <div class="px-4 space-y-2">
@@ -102,6 +118,7 @@ export class HabitsListComponent implements OnInit {
 
   constructor(
     private habitsService: HabitsService,
+    private habitTemplateService: HabitTemplateService,
     public i18n: I18nService,
   ) {}
 
@@ -134,5 +151,9 @@ export class HabitsListComponent implements OnInit {
 
   getDimensionColor(id: string): string {
     return getDimension(id as any)?.color ?? '#94a3b8'
+  }
+
+  templates() {
+    return this.habitTemplateService.templates()
   }
 }
