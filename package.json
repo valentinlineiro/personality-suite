@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve --watch",
     "build": "ng build",
+    "postbuild": "cp public/_redirects dist/personality-suite/_redirects",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "deploy": "npm run build && wrangler deploy",

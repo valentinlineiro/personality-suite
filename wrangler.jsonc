@@ -6,7 +6,7 @@
     "enabled": true
   },
   "assets": {
-    "directory": "dist/"
+    "directory": "dist/personality-suite"
   },
   "compatibility_flags": [
     "nodejs_compat"
