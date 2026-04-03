@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@source "./app/**/*.ts";
+@source "./app/**/*.html";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
