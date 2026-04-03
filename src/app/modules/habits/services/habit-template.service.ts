@@ -1,6 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core'
 import { HabitTemplate } from '../models/habit-template.model'
-import { BUILT_IN_TEMPLATES } from '../data/habit-templates'
 import { DatabaseService } from '../../../core/db/database.service'
 import { DimensionId, HabitType } from '../../../core/models/habit.model'
 
@@ -13,7 +12,7 @@ export interface DimensionSuggestion {
 @Injectable({ providedIn: 'root' })
 export class HabitTemplateService {
   private customTemplates = signal<HabitTemplate[]>([])
-  readonly templates = computed(() => [...BUILT_IN_TEMPLATES, ...this.customTemplates()])
+  readonly templates = computed(() => this.customTemplates())
 
   constructor(private db: DatabaseService) {}
 
@@ -23,7 +22,6 @@ export class HabitTemplateService {
       key: `custom-${t.id}`,
       name: t.name,
       description: t.description,
-      isBuiltIn: false,
       dbId: t.id,
       habit: t.habit,
     }))
@@ -54,7 +52,6 @@ export class HabitTemplateService {
         key: `custom-${id}`,
         name: data.name,
         description: data.description,
-        isBuiltIn: false,
         dbId: id as number,
         habit: data.habit,
       },

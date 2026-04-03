@@ -235,16 +235,10 @@ export class HabitFormComponent implements OnInit {
   }
 
   templateLabel(template: HabitTemplate): string {
-    if (template.isBuiltIn) {
-      return this.i18n.t(`habit_template.${template.key}.name`) || template.name
-    }
     return template.name
   }
 
   templateDescription(template: HabitTemplate): string {
-    if (template.isBuiltIn) {
-      return this.i18n.t(`habit_template.${template.key}.description`) || template.description || ''
-    }
     return template.description || ''
   }
 

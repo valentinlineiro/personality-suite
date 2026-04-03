@@ -64,9 +64,7 @@ import { TemplateFormComponent } from './template-form.component'
   `,
 })
 export class SettingsComponent {
-  customTemplates = computed(() =>
-    this.habitTemplateService.templates().filter((t: HabitTemplate) => !t.isBuiltIn)
-  )
+  customTemplates = computed(() => this.habitTemplateService.templates())
 
   constructor(
     public i18n: I18nService,

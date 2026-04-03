@@ -1,8 +1,28 @@
 import { HabitTemplateService } from './habit-template.service'
 
 describe('HabitTemplateService suggestDimensions', () => {
-  it('returns a high-confidence suggestion for exact template names', () => {
-    const service = new HabitTemplateService({ customTemplates: { toArray: vi.fn().mockResolvedValue([]) } } as any)
+  it('returns a high-confidence suggestion for exact custom template names', async () => {
+    const service = new HabitTemplateService({
+      customTemplates: {
+        toArray: vi.fn().mockResolvedValue([
+          {
+            id: 1,
+            name: 'Morning run',
+            createdAt: new Date('2026-04-01T08:00:00.000Z'),
+            habit: {
+              name: 'Morning run',
+              type: 'time',
+              unit: 'min',
+              targetValue: 25,
+              dimensionPrimary: 'vitality',
+              dimensionSecondary: 'recovery',
+            },
+          },
+        ]),
+      },
+    } as any)
+    await service.init()
+
     const suggestion = service.suggestDimensions('Morning run')
 
     expect(suggestion?.dimensionPrimary).toBe('vitality')

@@ -27,11 +27,11 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
       </div>
 
       <!-- Start from template -->
-      @if (templates().length > 0) {
+      @if (customTemplates().length > 0) {
         <div class="px-4 mb-5">
           <p class="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">{{ i18n.t('habit_list.start_from_template') }}</p>
           <div class="flex flex-wrap gap-2">
-            @for (template of templates(); track template.key) {
+            @for (template of customTemplates(); track template.key) {
               <a [routerLink]="['/habits/new']" [queryParams]="{ template: template.key }"
                 class="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-colors">
                 {{ template.name }}
@@ -153,7 +153,7 @@ export class HabitsListComponent implements OnInit {
     return getDimension(id as any)?.color ?? '#94a3b8'
   }
 
-  templates() {
+  customTemplates() {
     return this.habitTemplateService.templates()
   }
 }

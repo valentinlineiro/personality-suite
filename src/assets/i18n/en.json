@@ -108,32 +108,6 @@
     "auto_detect_applied": "Applied: {{primary}} + {{secondary}} ({{confidence}}% confidence).",
     "use_template": "Use"
   },
-  "habit_template": {
-    "duolingo": {
-      "name": "Duolingo lesson",
-      "description": "Short language practice block (15 min)."
-    },
-    "morning-run": {
-      "name": "Morning run",
-      "description": "Light cardio first thing in the morning."
-    },
-    "meditation": {
-      "name": "Meditation",
-      "description": "Focused presence work (10 min)."
-    },
-    "journal": {
-      "name": "Journal entry",
-      "description": "Daily reflection entry."
-    },
-    "read-pages": {
-      "name": "Read 20 pages",
-      "description": "Quantity goal for reading."
-    },
-    "ship-progress": {
-      "name": "Ship progress",
-      "description": "One hour block for execution work."
-    }
-  },
   "dimensions": {
     "vitality":   { "label": "Vitality",    "description": "Active physical investment" },
     "recovery":   { "label": "Recovery",    "description": "Wear management" },
