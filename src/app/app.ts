@@ -7,7 +7,9 @@ import { BottomNavComponent } from './shared/components/bottom-nav/bottom-nav.co
   standalone: true,
   imports: [RouterOutlet, BottomNavComponent],
   template: `
-    <router-outlet />
+    <div class="min-h-screen bg-slate-900 pb-24">
+      <router-outlet />
+    </div>
     <app-bottom-nav />
   `,
 })

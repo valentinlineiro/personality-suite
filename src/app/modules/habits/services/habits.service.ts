@@ -32,6 +32,13 @@ export class HabitsService {
     await this.updateHabit(id, { archivedAt: new Date() })
   }
 
+  async deleteHabit(id: number): Promise<void> {
+    await this.db.transaction('rw', this.db.habits, this.db.entries, async () => {
+      await this.db.entries.where('habitId').equals(id).delete()
+      await this.db.habits.delete(id)
+    })
+  }
+
   getTodayEntries(date: string): Promise<HabitEntry[]> {
     return this.db.entries.where('date').equals(date).toArray()
   }

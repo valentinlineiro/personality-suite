@@ -1,0 +1,86 @@
+import { HabitTemplate } from '../models/habit-template.model'
+
+export const HABIT_TEMPLATES: HabitTemplate[] = [
+  {
+    id: 'duolingo',
+    name: 'Duolingo lesson',
+    labelKey: 'habit_template.duolingo.name',
+    descriptionKey: 'habit_template.duolingo.description',
+    habit: {
+      name: 'Duolingo lesson',
+      type: 'time',
+      unit: 'min',
+      targetValue: 15,
+      dimensionPrimary: 'focus',
+      dimensionSecondary: 'autonomy',
+    },
+  },
+  {
+    id: 'morning-run',
+    name: 'Morning run',
+    labelKey: 'habit_template.morning_run.name',
+    descriptionKey: 'habit_template.morning_run.description',
+    habit: {
+      name: 'Morning run',
+      type: 'time',
+      unit: 'min',
+      targetValue: 25,
+      dimensionPrimary: 'vitality',
+      dimensionSecondary: 'recovery',
+    },
+  },
+  {
+    id: 'meditation',
+    name: 'Meditation',
+    labelKey: 'habit_template.meditation.name',
+    descriptionKey: 'habit_template.meditation.description',
+    habit: {
+      name: 'Meditation',
+      type: 'time',
+      unit: 'min',
+      targetValue: 10,
+      dimensionPrimary: 'presence',
+      dimensionSecondary: 'recovery',
+    },
+  },
+  {
+    id: 'journal',
+    name: 'Journal entry',
+    labelKey: 'habit_template.journal.name',
+    descriptionKey: 'habit_template.journal.description',
+    habit: {
+      name: 'Journal entry',
+      type: 'binary',
+      dimensionPrimary: 'presence',
+      dimensionSecondary: 'creativity',
+    },
+  },
+  {
+    id: 'read-pages',
+    name: 'Read 20 pages',
+    labelKey: 'habit_template.read_pages.name',
+    descriptionKey: 'habit_template.read_pages.description',
+    habit: {
+      name: 'Read 20 pages',
+      type: 'quantity',
+      unit: 'pages',
+      targetValue: 20,
+      dimensionPrimary: 'focus',
+      dimensionSecondary: 'creativity',
+    },
+  },
+  {
+    id: 'ship-progress',
+    name: 'Ship progress',
+    labelKey: 'habit_template.ship.name',
+    descriptionKey: 'habit_template.ship.description',
+    habit: {
+      name: 'Ship progress',
+      type: 'time',
+      unit: 'min',
+      targetValue: 60,
+      dimensionPrimary: 'execution',
+      dimensionSecondary: 'discipline',
+    },
+  },
+]

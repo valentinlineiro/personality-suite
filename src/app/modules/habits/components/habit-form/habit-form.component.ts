@@ -2,8 +2,10 @@ import { Component, OnInit, signal, computed } from '@angular/core'
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
 import { Router, ActivatedRoute, RouterLink } from '@angular/router'
 import { HabitsService } from '../../services/habits.service'
-import { HabitType, DimensionId } from '../../../../core/models/habit.model'
+import { Habit, HabitType, DimensionId } from '../../../../core/models/habit.model'
 import { DIMENSIONS, Dimension } from '../../../personality/constants/dimensions'
+import { HabitTemplate } from '../../models/habit-template.model'
+import { HabitTemplateService } from '../../services/habit-template.service'
 import { I18nService } from '../../../../core/i18n/i18n.service'
 
 @Component({
@@ -23,7 +25,21 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
         </h1>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-4 space-y-5">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-4 space-y-5">
+    <div class="space-y-2">
+      <p class="text-xs text-slate-400 uppercase tracking-widest">Common templates</p>
+      <div class="flex flex-wrap gap-2">
+        @for (template of habitTemplates(); track template.id) {
+          <button
+            type="button"
+            (click)="applyTemplate(template)"
+            [attr.title]="templateDescription(template)"
+            class="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-colors">
+            {{ templateLabel(template) }}
+          </button>
+        }
+      </div>
+    </div>
 
         <!-- Name -->
         <div>
@@ -33,6 +49,19 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
             class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500" />
           @if (form.get('name')?.invalid && form.get('name')?.touched) {
             <p class="text-red-400 text-sm mt-1">{{ i18n.t('habit_form.validation_name') }}</p>
+          }
+          @if (matchingTemplates().length > 0) {
+            <div class="mt-3 space-y-2">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Suggestions</p>
+              <div class="flex flex-wrap gap-2">
+                @for (template of matchingTemplates(); track template.id) {
+                  <button type="button" (click)="applyTemplate(template)"
+                    class="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-colors">
+                    {{ templateLabel(template) }}
+                  </button>
+                }
+              </div>
+            </div>
           }
         </div>
 
@@ -119,6 +148,14 @@ export class HabitFormComponent implements OnInit {
   dimensions: Dimension[] = DIMENSIONS
   editId = signal<number | null>(null)
   selectedType = signal<HabitType>('binary')
+  nameQuery = signal('')
+  habitTemplates = computed(() => this.habitTemplateService.templates())
+  matchingTemplates = computed(() => {
+    const query = this.nameQuery()
+    if (!query) return []
+    return this.habitTemplates()
+      .filter((template: HabitTemplate) => template.name.toLowerCase().includes(query))
+  })
 
   availableSecondaryDimensions = computed(() =>
     DIMENSIONS.filter(d => d.id !== this.form.get('dimensionPrimary')?.value)
@@ -127,6 +164,7 @@ export class HabitFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private habitsService: HabitsService,
+    private habitTemplateService: HabitTemplateService,
     private router: Router,
     private route: ActivatedRoute,
     public i18n: I18nService,
@@ -139,6 +177,12 @@ export class HabitFormComponent implements OnInit {
       dimensionPrimary: [null, Validators.required],
       dimensionSecondary: [null],
     })
+
+    const nameControl = this.form.get('name')
+    nameControl!.valueChanges.subscribe(value => {
+      this.nameQuery.set((value ?? '').trim().toLowerCase())
+    })
+    this.nameQuery.set((nameControl!.value ?? '').trim().toLowerCase())
 
     this.form.get('type')!.valueChanges.subscribe((v: HabitType) => {
       this.selectedType.set(v)
@@ -173,11 +217,32 @@ export class HabitFormComponent implements OnInit {
     return this.i18n.t(`habit_form.type_${type}`) || type
   }
 
+  templateLabel(template: HabitTemplate): string {
+    return this.i18n.t(template.labelKey ?? '') || template.name
+  }
+
+  templateDescription(template: HabitTemplate): string {
+    return this.i18n.t(template.descriptionKey ?? '') || template.description || ''
+  }
+
   unitPlaceholder(): string {
     if (this.selectedType() === 'time') {
       return this.i18n.t('habit_form.unit_placeholder_time') || 'min'
     }
     return this.i18n.t('habit_form.unit_placeholder_quantity') || 'km'
+  }
+
+  applyTemplate(template: HabitTemplate): void {
+    const preset = template.habit
+    this.form.patchValue({
+      name: preset.name,
+      type: preset.type,
+      unit: preset.unit ?? '',
+      targetValue: preset.targetValue ?? null,
+      dimensionPrimary: preset.dimensionPrimary,
+      dimensionSecondary: preset.dimensionSecondary ?? null,
+    })
+    this.selectedType.set(preset.type)
   }
 
   dimLabel(id: string): string {

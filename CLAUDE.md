@@ -164,13 +164,17 @@ Injected as a singleton via DI. Do not instantiate Dexie anywhere else.
 - List of all active habits with name, type, and primary dimension
 - Per-habit actions: edit, archive
 - Separate section for archived habits (collapsed by default)
-- Button to create a new habit
+- Buttons to create either a new habit or a new template
+ - Templates now live in Settings under “Habit templates,” where a dedicated form captures template metadata and lists saved templates for future typing suggestions.
+- Active habits can also be deleted from the list view; the action triggers a confirmation dialog and removes the habit plus all its entries.
 
 **HabitForm** (create / edit)
 - Fields: name (required), type (required), unit (if quantity/time), target (if quantity/time)
 - `dimensionPrimary` — select from 8 dimensions (required on creation, editable)
 - `dimensionSecondary` — select from 8 dimensions + "None" (optional, cannot equal primary)
 - On edit: pre-populate with current values
+- As you type a name, template matches surface below the input; tapping one fills every field (type/unit/target/dimensions) so you can tweak and save immediately.
+- A small "Save as template" area captures the current form (including naming the template) and adds it to the suggestion pool for future typing.
 
 ### Business Logic (`habits.service.ts`)
 
@@ -182,6 +186,7 @@ getArchivedHabits(): Promise<Habit[]>
 createHabit(data: Omit<Habit, 'id' | 'createdAt'>): Promise<number>
 updateHabit(id: number, data: Partial<Habit>): Promise<void>
 archiveHabit(id: number): Promise<void>
+ deleteHabit(id: number): Promise<void>
 
 getTodayEntries(date: string): Promise<HabitEntry[]>
 getEntriesForPeriod(habitId: number, from: string, to: string): Promise<HabitEntry[]>
@@ -192,6 +197,8 @@ Rules:
 - Never permanently delete habits — only archive (`archivedAt = now`)
 - Entries are immutable once created; use upsert to update the same day
 - `date` always in `'YYYY-MM-DD'` format
+
+Deletion note: a new `deleteHabit` exists for emergency cleanup; it removes the habit and every entry associated with it, so use it only when you’re sure the data should disappear.
 
 ### Streak Logic
 
@@ -302,15 +309,22 @@ Flow for existing habits without `dimensionPrimary`. List of untagged habits wit
 
 ## Navigation
 
-Bottom nav with 3 items:
+Bottom nav with 4 items:
 
-| Icon | Label | Route |
-|---|---|---|
-| ✓ | Today | `/habits/today` |
-| ◻ | Week | `/habits/week` |
-| ◉ | Profile | `/personality` |
+ | Icon | Label | Route |
+ |---|---|---|
+ | ✓ | Today | `/habits/today` |
+ | ◻ | Week | `/habits/week` |
+ | ☰ | List | `/habits/list` |
+ | ◉ | Profile | `/personality` |
+ | ⚙️ | Settings | `/settings` |
 
 Default route: `/habits/today`
+
+### Settings & Language
+
+- `SettingsComponent` hosts the `LanguageSelectorComponent` so the user can switch between `en` and `es`. `I18nService` stores the choice in `localStorage` and reloads the appropriate JSON.
+- Access this view when tapping the gear icon in the bottom navigation; keep the bottom nav visible even when the settings pane is active.
 
 ---
 
@@ -341,10 +355,11 @@ Default route: `/habits/today`
 10. `BottomNav` + routing
 11. `ProfileEngineService`
 12. `RadarChart` (D3 + ViewChild)
-13. `NarrativePhrase`
-14. `PersonalityView`
-15. `OnboardingTagging`
-16. `ng add @angular/pwa`
-17. Configure Cloudflare Pages: add `_redirects` file with `/* /index.html 200`
+13. `LanguageSelector` + `SettingsComponent`
+14. `NarrativePhrase`
+15. `PersonalityView`
+16. `OnboardingTagging`
+17. `ng add @angular/pwa`
+18. Configure Cloudflare Pages: add `_redirects` file with `/* /index.html 200`
 
 Do not skip steps. The engine produces garbage without clean data.

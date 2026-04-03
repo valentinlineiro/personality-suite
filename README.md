@@ -1,59 +1,72 @@
 # PersonalitySuite
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.6.
+Offline-first personal utility suite with habit tracking and an emergent personality profile.
 
-## Development server
+## Vision & Modules
 
-To start a local development server, run:
+- **Habits** — track binary, quantity, and time-based habits with units, targets, and dimension tagging. Includes daily progress, archives, and an edit/create form.
+- **Personality** — infer the user’s active identity from tagged habit data via a deterministic profile engine, radar chart, and narrative phrasing.
+- **Settings** — access language preferences (EN/ES) and other config-level controls from a dedicated screen linked in the bottom navigation.
+
+## Key Features
+
+- Offline-first persistence via Dexie (IndexedDB) with no network dependencies.
+- Standalone Angular components powered by Signals for reactive state.
+- Tailwind CSS utility styling plus D3.js for the radar visualization.
+- Fully localized UI through the custom `I18nService` and JSON dictionaries per language.
+- Bottom navigation that surfaces Today / Week / Personality / Settings routes.
+
+## Technology Stack
+
+| Layer | Technology |
+| --- | --- |
+| Framework | Angular 21+ (standalone components, no NgModules) |
+| Language | TypeScript with `strict: true` |
+| Styles | Tailwind CSS (via `@tailwindcss/cli`) |
+| Persistence | Dexie.js (IndexedDB) |
+| Reactive State | Angular Signals (+ RxJS where idiomatic) |
+| Charts | D3.js radar chart |
+| PWA | `@angular/service-worker` |
+| Build | Angular CLI |
+
+## Project Layout
+
+- `src/app/app.ts` – shell with router outlet and bottom navigation.
+- `src/app/app.routes.ts` – lazy routes for Habits, Personality, and Settings modules.
+- `src/app/core/` – models, utilities, and `I18nService`.
+- `src/app/shared/components/` – reusable UI (BottomNav, LanguageSelector, etc.).
+- `src/app/modules/` – Habits and Personality submodules plus the Settings page with language controls.
+- `src/assets/i18n/` – JSON translations (`en.json`, `es.json`).
+
+## Getting Started
+
+### Development server
 
 ```bash
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open `http://localhost:4200/`; the app automatically reloads on source changes.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+### Building
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Outputs optimized bundles in `dist/personality-suite` and copies `public` plus `src/assets` (including localization files).
 
-## Running unit tests
+### Testing
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+- Unit tests: `ng test`
+- (Future) End-to-end: add your preferred framework (`ng e2e` placeholder).
 
-```bash
-ng test
-```
+## Additional Notes
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Navigation links are persisted via the bottom nav for Today, Week, List, Personality, and Settings.
+- Language preferences are stored in `localStorage` and applied via an `APP_INITIALIZER`.
+- Follow the implementation order in `CLAUDE.md` for consistent upgrades and feature sequencing.
+- Habit creation exposes curated templates so you can tap a preset to populate the form before tweaking values (`src/app/modules/habits/data/habit-templates.ts`). Matching suggestions appear as you type.
+- Template management moved to Settings (Habit templates section) where you can add new entries via a dedicated template form and see the list of saved templates.
+- Active habits can be archived or deleted from the list view; deleting removes the habit and all its entries after a confirmation prompt.

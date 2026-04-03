@@ -5,26 +5,31 @@ export const HABITS_ROUTES: Routes = [
     path: 'today',
     loadComponent: () =>
       import('./components/today-view/today-view.component').then(m => m.TodayViewComponent),
+    data: { title: 'Today' },
   },
   {
     path: 'week',
     loadComponent: () =>
       import('./components/week-view/week-view.component').then(m => m.WeekViewComponent),
+    data: { title: 'Week' },
   },
   {
     path: 'list',
     loadComponent: () =>
       import('./components/habits-list/habits-list.component').then(m => m.HabitsListComponent),
+    data: { title: 'Habits' },
   },
   {
     path: 'new',
     loadComponent: () =>
       import('./components/habit-form/habit-form.component').then(m => m.HabitFormComponent),
+    data: { title: 'New Habit' },
   },
   {
     path: 'edit/:id',
     loadComponent: () =>
       import('./components/habit-form/habit-form.component').then(m => m.HabitFormComponent),
+    data: { title: 'Edit Habit' },
   },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ]

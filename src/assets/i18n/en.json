@@ -2,6 +2,7 @@
   "nav": {
     "today": "Today",
     "week": "Week",
+    "list": "List",
     "profile": "Profile",
     "settings": "Settings"
   },
@@ -24,6 +25,9 @@
     "new": "+ New",
     "edit": "Edit",
     "archive": "Archive",
+    "delete": "Delete",
+    "new_habit": "New Habit",
+    "new_template": "New Template",
     "archived": "Archived ({{count}})"
   },
   "habit_form": {
@@ -79,6 +83,37 @@
     "title": "Settings",
     "description": "Adjust app preferences such as the interface language.",
     "language_label": "Language"
+  },
+  "settings_templates": {
+    "templates_title": "Habit templates",
+    "templates_description": "Keep custom suggestions here and reuse them whenever you start typing a familiar habit name.",
+    "templates_empty": "No custom templates yet."
+  },
+  "habit_template": {
+    "duolingo": {
+      "name": "Duolingo lesson",
+      "description": "Short language practice block (15 min)."
+    },
+    "morning_run": {
+      "name": "Morning run",
+      "description": "Light cardio first thing in the morning."
+    },
+    "meditation": {
+      "name": "Meditation",
+      "description": "Focused presence work (10 min)."
+    },
+    "journal": {
+      "name": "Journal entry",
+      "description": "Daily reflection entry."
+    },
+    "read_pages": {
+      "name": "Read 20 pages",
+      "description": "Quantity goal for reading."
+    },
+    "ship": {
+      "name": "Ship progress",
+      "description": "One hour block for execution work."
+    }
   },
   "dimensions": {
     "vitality":   { "label": "Vitality",    "description": "Active physical investment" },

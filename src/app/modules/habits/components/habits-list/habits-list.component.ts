@@ -13,10 +13,16 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
     <div class="min-h-screen bg-slate-900 pb-24">
       <div class="px-4 pt-8 pb-4 flex items-center justify-between">
         <h1 class="text-xl font-semibold text-white">{{ i18n.t('habit_list.title') }}</h1>
-        <a routerLink="/habits/new"
-          class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
-          {{ i18n.t('habit_list.new') }}
-        </a>
+        <div class="flex gap-2">
+          <a routerLink="/habits/new"
+            class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+            {{ i18n.t('habit_list.new_habit') }}
+          </a>
+          <a routerLink="/settings" fragment="templates"
+            class="bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+            {{ i18n.t('habit_list.new_template') }}
+          </a>
+        </div>
       </div>
 
       <!-- Active habits -->
@@ -48,6 +54,10 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
                 class="text-slate-500 hover:text-red-400 text-sm px-3 py-1 rounded-lg hover:bg-slate-700 transition-colors">
                 {{ i18n.t('habit_list.archive') }}
               </button>
+              <button (click)="deleteHabit(habit)"
+                class="text-slate-500 hover:text-red-400 text-sm px-3 py-1 rounded-lg hover:bg-slate-700 transition-colors">
+                {{ i18n.t('habit_list.delete') }}
+              </button>
             </div>
           </div>
         }
@@ -66,13 +76,19 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
           </button>
           @if (showArchived()) {
             <div class="space-y-2">
-              @for (habit of archivedHabits(); track habit.id) {
-                <div class="bg-slate-800/50 rounded-xl px-4 py-3 opacity-60">
-                  <p class="text-slate-400 font-medium">{{ habit.name }}</p>
-                  <span class="text-xs text-slate-600 capitalize">{{ habit.type }}</span>
+            @for (habit of archivedHabits(); track habit.id) {
+              <div class="bg-slate-800/50 rounded-xl px-4 py-3 opacity-60">
+                <p class="text-slate-400 font-medium">{{ habit.name }}</p>
+                <span class="text-xs text-slate-600 capitalize">{{ habit.type }}</span>
+                <div class="mt-2 flex gap-2">
+                  <button (click)="deleteHabit(habit)"
+                    class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded-lg border border-slate-700 hover:border-slate-500 transition-colors">
+                    {{ i18n.t('habit_list.delete') }}
+                  </button>
                 </div>
-              }
-            </div>
+              </div>
+            }
+          </div>
           }
         </div>
       }
@@ -98,6 +114,14 @@ export class HabitsListComponent implements OnInit {
     await this.habitsService.archiveHabit(habit.id!)
     this.activeHabits.update(list => list.filter(h => h.id !== habit.id))
     this.archivedHabits.update(list => [...list, { ...habit, archivedAt: new Date() }])
+  }
+
+  async deleteHabit(habit: Habit): Promise<void> {
+    if (!habit.id) return
+    if (!confirm(`Delete "${habit.name}" and all its entries?`)) return
+    await this.habitsService.deleteHabit(habit.id)
+    this.activeHabits.update(list => list.filter(h => h.id !== habit.id))
+    this.archivedHabits.update(list => list.filter(h => h.id !== habit.id))
   }
 
   toggleArchived(): void {

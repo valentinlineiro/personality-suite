@@ -2,6 +2,7 @@
   "nav": {
     "today": "Hoy",
     "week": "Semana",
+    "list": "Lista",
     "profile": "Perfil",
     "settings": "Configuración"
   },
@@ -24,6 +25,9 @@
     "new": "+ Nuevo",
     "edit": "Editar",
     "archive": "Archivar",
+    "delete": "Eliminar",
+    "new_habit": "Nuevo hábito",
+    "new_template": "Nueva plantilla",
     "archived": "Archivados ({{count}})"
   },
   "habit_form": {
@@ -79,6 +83,37 @@
     "title": "Configuración",
     "description": "Ajusta preferencias de la app, como el idioma de la interfaz.",
     "language_label": "Idioma"
+  },
+  "settings_templates": {
+    "templates_title": "Plantillas",
+    "templates_description": "Guarda sugerencias personalizadas aquí y reutilízalas cuando escribas un hábito similar.",
+    "templates_empty": "Aún no hay plantillas personalizadas."
+  },
+  "habit_template": {
+    "duolingo": {
+      "name": "Lección de Duolingo",
+      "description": "Bloque corto de práctica lingüística (15 min)."
+    },
+    "morning_run": {
+      "name": "Carrera matutina",
+      "description": "Cardio ligero al principio del día."
+    },
+    "meditation": {
+      "name": "Meditación",
+      "description": "Trabajo de presencia consciente (10 min)."
+    },
+    "journal": {
+      "name": "Escribir en el diario",
+      "description": "Entrada diaria de reflexión."
+    },
+    "read_pages": {
+      "name": "Leer 20 páginas",
+      "description": "Meta de cantidad para la lectura."
+    },
+    "ship": {
+      "name": "Avance en proyecto",
+      "description": "Bloque de una hora para ejecución."
+    }
   },
   "dimensions": {
     "vitality":   { "label": "Vitalidad",     "description": "Inversión física activa" },

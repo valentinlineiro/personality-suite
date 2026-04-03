@@ -15,6 +15,7 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () =>
       import('./modules/settings/components/settings.component').then(m => m.SettingsComponent),
+    data: { title: 'Settings' },
   },
   { path: '', redirectTo: '/habits/today', pathMatch: 'full' },
 ]

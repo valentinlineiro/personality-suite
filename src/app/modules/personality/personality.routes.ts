@@ -7,6 +7,7 @@ export const PERSONALITY_ROUTES: Routes = [
       import('./components/personality-view/personality-view.component').then(
         m => m.PersonalityViewComponent
       ),
+    data: { title: 'Personality' },
   },
   {
     path: 'onboarding',
@@ -14,5 +15,6 @@ export const PERSONALITY_ROUTES: Routes = [
       import('./components/onboarding-tagging/onboarding-tagging.component').then(
         m => m.OnboardingTaggingComponent
       ),
+    data: { title: 'Tag Habits' },
   },
 ]

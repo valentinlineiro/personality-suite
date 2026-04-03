@@ -22,6 +22,13 @@ import { I18nService } from '../../../core/i18n/i18n.service'
         </svg>
         <span class="text-xs">{{ i18n.t('nav.week') }}</span>
       </a>
+      <a routerLink="/habits/list" routerLinkActive="text-blue-400" class="flex-1 flex flex-col items-center justify-center gap-1 text-slate-500 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+        </svg>
+        <span class="text-xs">{{ i18n.t('nav.list') }}</span>
+      </a>
       <a routerLink="/personality" routerLinkActive="text-blue-400" class="flex-1 flex flex-col items-center justify-center gap-1 text-slate-500 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
