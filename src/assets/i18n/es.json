@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "today": "Hoy",
+    "week": "Semana",
+    "profile": "Perfil",
+    "settings": "Configuración"
+  },
+  "today": {
+    "title": "Hoy",
+    "progress": "{{completed}} / {{total}} completados",
+    "empty": "Sin hábitos aún.",
+    "empty_cta": "Crea tu primer hábito →",
+    "new": "+ Nuevo",
+    "streak": "🔥"
+  },
+  "week": {
+    "title": "Semana",
+    "empty": "Aún no hay registros esta semana.",
+    "days": ["L", "M", "X", "J", "V", "S", "D"]
+  },
+  "habit_list": {
+    "title": "Hábitos",
+    "empty": "Sin hábitos aún. Crea uno para empezar.",
+    "new": "+ Nuevo",
+    "edit": "Editar",
+    "archive": "Archivar",
+    "archived": "Archivados ({{count}})"
+  },
+  "habit_form": {
+    "new_title": "Nuevo hábito",
+    "edit_title": "Editar hábito",
+    "name_label": "Nombre",
+    "name_placeholder": "ej. Correr por la mañana",
+    "type_label": "Tipo",
+    "unit_label_time": "Unidad (ej. min)",
+    "unit_label_quantity": "Unidad (ej. km)",
+    "unit_placeholder_time": "ej. min",
+    "unit_placeholder_quantity": "ej. km",
+    "type_binary": "Binario",
+    "type_quantity": "Cantidad",
+    "type_time": "Tiempo",
+    "target_label": "Meta",
+    "target_placeholder": "ej. 30",
+    "dimension_primary_label": "Dimensión primaria",
+    "dimension_primary_placeholder": "Seleccionar dimensión",
+    "dimension_secondary_label": "Dimensión secundaria",
+    "dimension_secondary_optional": "(opcional)",
+    "save": "Guardar cambios",
+    "create": "Crear hábito",
+    "validation_name": "El nombre es obligatorio.",
+    "validation_type": "El tipo es obligatorio.",
+    "validation_dimension": "La dimensión primaria es obligatoria."
+  },
+  "personality": {
+    "title": "Identidad activa",
+    "dimensions_title": "Dimensiones",
+    "period_7d": "7d",
+    "period_30d": "30d",
+    "period_90d": "90d",
+    "untagged_title": "{{count}} hábitos sin etiquetar",
+    "untagged_desc": "Etiquétalos para mejorar la precisión de tu perfil.",
+    "untagged_cta": "Etiquetar →",
+    "narrative": {
+      "no_habits": "Etiqueta tus hábitos para ver tu perfil.",
+      "no_data": "Sigue registrando hábitos para construir tu perfil.",
+      "dominant_peak": "{{label}} en máximos — zona de consolidación.",
+      "dominant_base": "Esta semana has sido principalmente {{label}}.",
+      "neglected_suffix": "{{label}} lleva semanas en mínimos."
+    }
+  },
+  "onboarding": {
+    "title": "Etiqueta tus hábitos",
+    "description": "Asigna una dimensión primaria a cada hábito para que se pueda calcular tu perfil.",
+    "save_all": "Guardar todo",
+    "all_tagged": "Todos los hábitos ya están etiquetados.",
+    "select_placeholder": "Seleccionar dimensión"
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Ajusta preferencias de la app, como el idioma de la interfaz.",
+    "language_label": "Idioma"
+  },
+  "dimensions": {
+    "vitality":   { "label": "Vitalidad",     "description": "Inversión física activa" },
+    "recovery":   { "label": "Recuperación",  "description": "Gestión del desgaste" },
+    "focus":      { "label": "Foco",          "description": "Trabajo cognitivo profundo" },
+    "creativity": { "label": "Creatividad",   "description": "Output generativo" },
+    "discipline": { "label": "Disciplina",    "description": "Consistencia de sistemas" },
+    "execution":  { "label": "Ejecución",     "description": "Avance en proyectos reales" },
+    "presence":   { "label": "Presencia",     "description": "Autoobservación deliberada" },
+    "autonomy":   { "label": "Autonomía",     "description": "Autodirección fuera del trabajo" }
+  }
+}

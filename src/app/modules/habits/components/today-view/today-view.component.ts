@@ -4,6 +4,7 @@ import { HabitsService } from '../../services/habits.service'
 import { Habit } from '../../../../core/models/habit.model'
 import { HabitEntry } from '../../../../core/models/habit-entry.model'
 import { toDateString } from '../../../../core/utils/date.utils'
+import { I18nService } from '../../../../core/i18n/i18n.service'
 
 interface HabitRow {
   habit: Habit
@@ -21,12 +22,12 @@ interface HabitRow {
       <!-- Header -->
       <div class="px-4 pt-8 pb-4 flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-semibold text-white">Today</h1>
+          <h1 class="text-xl font-semibold text-white">{{ i18n.t('today.title') }}</h1>
           <p class="text-sm text-slate-500">{{ todayLabel() }}</p>
         </div>
         <a routerLink="/habits/new"
           class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
-          + New
+          {{ i18n.t('today.new') }}
         </a>
       </div>
 
@@ -34,7 +35,7 @@ interface HabitRow {
       @if (rows().length > 0) {
         <div class="px-4 mb-4">
           <div class="flex items-center justify-between text-sm mb-1">
-            <span class="text-slate-400">{{ completedCount() }} / {{ rows().length }} completed</span>
+            <span class="text-slate-400">{{ i18n.t('today.progress', { completed: completedCount(), total: rows().length }) }}</span>
             <span class="text-slate-500">{{ progressPct() }}%</span>
           </div>
           <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
@@ -48,9 +49,10 @@ interface HabitRow {
       <div class="px-4 space-y-2">
         @if (rows().length === 0) {
           <div class="text-center py-16">
-            <p class="text-slate-500 mb-4">No habits yet.</p>
-            <a routerLink="/habits/new"
-              class="text-blue-400 hover:text-blue-300 text-sm">Create your first habit →</a>
+            <p class="text-slate-500 mb-4">{{ i18n.t('today.empty') }}</p>
+            <a routerLink="/habits/new" class="text-blue-400 hover:text-blue-300 text-sm">
+              {{ i18n.t('today.empty_cta') }}
+            </a>
           </div>
         }
 
@@ -60,7 +62,6 @@ interface HabitRow {
             [class.ring-emerald-500]="isCompleted(row)">
 
             <div class="flex items-start gap-3">
-              <!-- Checkbox / status -->
               @if (row.habit.type === 'binary') {
                 <button (click)="toggleBinary(row)"
                   class="mt-0.5 w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors"
@@ -86,11 +87,10 @@ interface HabitRow {
                 <div class="flex items-center gap-2">
                   <p class="text-white font-medium truncate">{{ row.habit.name }}</p>
                   @if (row.streak >= 2) {
-                    <span class="text-xs text-orange-400 font-medium">🔥 {{ row.streak }}</span>
+                    <span class="text-xs text-orange-400 font-medium">{{ i18n.t('today.streak') }} {{ row.streak }}</span>
                   }
                 </div>
 
-                <!-- Quantity / time input -->
                 @if (row.habit.type !== 'binary') {
                   <div class="flex items-center gap-2 mt-2">
                     <input type="number" min="0"
@@ -115,7 +115,6 @@ interface HabitRow {
                 }
               </div>
             </div>
-
           </div>
         }
       </div>
@@ -127,7 +126,7 @@ export class TodayViewComponent implements OnInit {
   rows = signal<HabitRow[]>([])
 
   todayLabel = signal(
-    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
   )
 
   completedCount = computed(() => this.rows().filter(r => this.isCompleted(r)).length)
@@ -136,7 +135,10 @@ export class TodayViewComponent implements OnInit {
     return total === 0 ? 0 : Math.round((this.completedCount() / total) * 100)
   })
 
-  constructor(private habitsService: HabitsService) {}
+  constructor(
+    private habitsService: HabitsService,
+    public i18n: I18nService,
+  ) {}
 
   ngOnInit(): void {
     this.load()

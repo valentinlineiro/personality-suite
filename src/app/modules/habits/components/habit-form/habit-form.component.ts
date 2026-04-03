@@ -1,15 +1,15 @@
 import { Component, OnInit, signal, computed } from '@angular/core'
-import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
 import { Router, ActivatedRoute, RouterLink } from '@angular/router'
 import { HabitsService } from '../../services/habits.service'
 import { HabitType, DimensionId } from '../../../../core/models/habit.model'
 import { DIMENSIONS, Dimension } from '../../../personality/constants/dimensions'
+import { I18nService } from '../../../../core/i18n/i18n.service'
 
 @Component({
   selector: 'app-habit-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-h-screen bg-slate-900 pb-24">
       <div class="px-4 pt-8 pb-4 flex items-center gap-3">
@@ -18,81 +18,87 @@ import { DIMENSIONS, Dimension } from '../../../personality/constants/dimensions
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         </a>
-        <h1 class="text-xl font-semibold text-white">{{ editId() ? 'Edit Habit' : 'New Habit' }}</h1>
+        <h1 class="text-xl font-semibold text-white">
+          {{ editId() ? i18n.t('habit_form.edit_title') : i18n.t('habit_form.new_title') }}
+        </h1>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-4 space-y-5">
 
         <!-- Name -->
         <div>
-          <label class="block text-sm text-slate-400 mb-1">Name</label>
-          <input formControlName="name" type="text" placeholder="e.g. Morning run"
+          <label class="block text-sm text-slate-400 mb-1">{{ i18n.t('habit_form.name_label') }}</label>
+          <input formControlName="name" type="text"
+            [placeholder]="i18n.t('habit_form.name_placeholder')"
             class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500" />
           @if (form.get('name')?.invalid && form.get('name')?.touched) {
-            <p class="text-red-400 text-sm mt-1">Name is required.</p>
+            <p class="text-red-400 text-sm mt-1">{{ i18n.t('habit_form.validation_name') }}</p>
           }
         </div>
 
         <!-- Type -->
         <div>
-          <label class="block text-sm text-slate-400 mb-1">Type</label>
+          <label class="block text-sm text-slate-400 mb-1">{{ i18n.t('habit_form.type_label') }}</label>
           <div class="flex gap-2">
             @for (t of habitTypes; track t) {
               <button type="button" (click)="setType(t)"
                 class="flex-1 py-2 rounded-xl text-sm font-medium transition-colors"
                 [class]="selectedType() === t ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'">
-                {{ t }}
+                {{ typeLabel(t) }}
               </button>
             }
           </div>
           @if (form.get('type')?.invalid && form.get('type')?.touched) {
-            <p class="text-red-400 text-sm mt-1">Type is required.</p>
+            <p class="text-red-400 text-sm mt-1">{{ i18n.t('habit_form.validation_type') }}</p>
           }
         </div>
 
-        <!-- Unit (quantity / time) -->
+        <!-- Unit / Target -->
         @if (selectedType() === 'quantity' || selectedType() === 'time') {
           <div class="flex gap-3">
             <div class="flex-1">
               <label class="block text-sm text-slate-400 mb-1">
-                {{ selectedType() === 'time' ? 'Unit (e.g. min)' : 'Unit (e.g. km)' }}
+                {{ selectedType() === 'time' ? i18n.t('habit_form.unit_label_time') : i18n.t('habit_form.unit_label_quantity') }}
               </label>
-              <input formControlName="unit" type="text"
-                class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500"
-                [placeholder]="selectedType() === 'time' ? 'min' : 'km'" />
+            <input formControlName="unit" type="text"
+              class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500"
+              [placeholder]="unitPlaceholder()" />
             </div>
             <div class="flex-1">
-              <label class="block text-sm text-slate-400 mb-1">Target</label>
+              <label class="block text-sm text-slate-400 mb-1">{{ i18n.t('habit_form.target_label') }}</label>
               <input formControlName="targetValue" type="number" min="1"
                 class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500"
-                placeholder="e.g. 30" />
+                [placeholder]="i18n.t('habit_form.target_placeholder')" />
             </div>
           </div>
         }
 
         <!-- Primary Dimension -->
         <div>
-          <label class="block text-sm text-slate-400 mb-1">Primary Dimension</label>
+          <label class="block text-sm text-slate-400 mb-1">{{ i18n.t('habit_form.dimension_primary_label') }}</label>
           <select formControlName="dimensionPrimary"
             class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
-            <option value="" disabled>Select dimension</option>
+            <option value="" disabled>{{ i18n.t('habit_form.dimension_primary_placeholder') }}</option>
             @for (d of dimensions; track d.id) {
-              <option [value]="d.id">{{ d.label }}</option>
+              <option [value]="d.id">{{ dimLabel(d.id) }}</option>
             }
           </select>
           @if (form.get('dimensionPrimary')?.invalid && form.get('dimensionPrimary')?.touched) {
-            <p class="text-red-400 text-sm mt-1">Primary dimension is required.</p>
+            <p class="text-red-400 text-sm mt-1">{{ i18n.t('habit_form.validation_dimension') }}</p>
           }
         </div>
 
         <!-- Secondary Dimension -->
         <div>
-          <label class="block text-sm text-slate-400 mb-1">Secondary Dimension <span class="text-slate-500">(optional)</span></label>
+          <label class="block text-sm text-slate-400 mb-1">
+            {{ i18n.t('habit_form.dimension_secondary_label') }}
+            <span class="text-slate-500">{{ i18n.t('habit_form.dimension_secondary_optional') }}</span>
+          </label>
           <select formControlName="dimensionSecondary"
             class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
-            <option [value]="null">None</option>
+            <option [value]="null">—</option>
             @for (d of availableSecondaryDimensions(); track d.id) {
-              <option [value]="d.id">{{ d.label }}</option>
+              <option [value]="d.id">{{ dimLabel(d.id) }}</option>
             }
           </select>
         </div>
@@ -100,7 +106,7 @@ import { DIMENSIONS, Dimension } from '../../../personality/constants/dimensions
         <!-- Submit -->
         <button type="submit" [disabled]="form.invalid"
           class="w-full py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors mt-4">
-          {{ editId() ? 'Save Changes' : 'Create Habit' }}
+          {{ editId() ? i18n.t('habit_form.save') : i18n.t('habit_form.create') }}
         </button>
 
       </form>
@@ -123,6 +129,7 @@ export class HabitFormComponent implements OnInit {
     private habitsService: HabitsService,
     private router: Router,
     private route: ActivatedRoute,
+    public i18n: I18nService,
   ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
@@ -160,6 +167,21 @@ export class HabitFormComponent implements OnInit {
 
   setType(t: HabitType): void {
     this.form.patchValue({ type: t })
+  }
+
+  typeLabel(type: HabitType): string {
+    return this.i18n.t(`habit_form.type_${type}`) || type
+  }
+
+  unitPlaceholder(): string {
+    if (this.selectedType() === 'time') {
+      return this.i18n.t('habit_form.unit_placeholder_time') || 'min'
+    }
+    return this.i18n.t('habit_form.unit_placeholder_quantity') || 'km'
+  }
+
+  dimLabel(id: string): string {
+    return this.i18n.t(`dimensions.${id}.label`) || id
   }
 
   async onSubmit(): Promise<void> {

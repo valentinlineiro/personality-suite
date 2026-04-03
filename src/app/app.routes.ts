@@ -11,5 +11,10 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/personality/personality.routes').then(m => m.PERSONALITY_ROUTES),
   },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./modules/settings/components/settings.component').then(m => m.SettingsComponent),
+  },
   { path: '', redirectTo: '/habits/today', pathMatch: 'full' },
 ]

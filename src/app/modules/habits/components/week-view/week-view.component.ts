@@ -3,6 +3,7 @@ import { HabitsService } from '../../services/habits.service'
 import { Habit } from '../../../../core/models/habit.model'
 import { HabitEntry } from '../../../../core/models/habit-entry.model'
 import { toDateString, addDays, startOfWeek } from '../../../../core/utils/date.utils'
+import { I18nService } from '../../../../core/i18n/i18n.service'
 
 type CellState = 'completed' | 'partial' | 'pending' | 'nodata'
 
@@ -19,7 +20,7 @@ interface WeekRow {
     <div class="min-h-screen bg-slate-900 pb-24">
       <!-- Header -->
       <div class="px-4 pt-8 pb-4 flex items-center justify-between">
-        <h1 class="text-xl font-semibold text-white">Week</h1>
+        <h1 class="text-xl font-semibold text-white">{{ i18n.t('week.title') }}</h1>
         <div class="flex items-center gap-2">
           <button (click)="prevWeek()" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +55,7 @@ interface WeekRow {
         <!-- Rows -->
         <div class="space-y-1">
           @if (rows().length === 0) {
-            <p class="text-slate-500 text-sm py-8 text-center">No habits tracked yet.</p>
+            <p class="text-slate-500 text-sm py-8 text-center">{{ i18n.t('week.empty') }}</p>
           }
           @for (row of rows(); track row.habit.id) {
             <div class="grid grid-cols-[1fr_repeat(7,2rem)] gap-1 items-center">
@@ -91,10 +92,10 @@ export class WeekViewComponent implements OnInit {
   })
 
   dayHeaders = computed(() => {
-    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+    const labels = this.i18n.tArr('week.days')
     return this.weekDates().map((d, i) => ({
       date: toDateString(d),
-      label: labels[i],
+      label: labels[i] ?? String(i),
       num: d.getDate(),
       isToday: toDateString(d) === this.today,
     }))
@@ -104,8 +105,8 @@ export class WeekViewComponent implements OnInit {
     const dates = this.weekDates()
     const from = dates[0]
     const to = dates[6]
-    const fromStr = from.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    const toStr = to.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    const fromStr = from.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    const toStr = to.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     return `${fromStr} – ${toStr}`
   })
 
@@ -113,7 +114,10 @@ export class WeekViewComponent implements OnInit {
     return toDateString(this.weekStart()) === toDateString(startOfWeek(new Date()))
   })
 
-  constructor(private habitsService: HabitsService) {}
+  constructor(
+    private habitsService: HabitsService,
+    public i18n: I18nService,
+  ) {}
 
   ngOnInit(): void {
     this.habitsService.getActiveHabits().then(habits => {
