@@ -1,333 +1,115 @@
-# Personality Suite — CLAUDE.md
+# Personality Suite — Project Reference
 
-## Project Vision
+## Vision
+Personality Suite pairs a compact habit tracker with an emergent personality profile. Every interaction stays offline (IndexedDB via Dexie), the UI ships as a single-page PWA, and the system rewards tagging habits with personality dimensions so the profile engine can surface meaningful strengths and gaps.
 
-Offline-first personal utility suite. Two modules in v1:
-
-- **Habits** — daily habit tracking (binary, quantity, time)
-- **Personality** — emergent identity profile inferred from habit data
-
-The personality module is not a static test. The system infers who the user is becoming based on their actual behavior recorded in the habit tracker.
-
----
-
-## Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Angular 21 (standalone components) |
-| Language | TypeScript strict (`strict: true`) |
-| Styles | Tailwind CSS v4 via `@tailwindcss/postcss` |
-| Persistence | Dexie.js v4 (IndexedDB) |
-| Reactive state | Angular Signals + RxJS where idiomatic |
-| Charts | D3.js (radar chart SVG) |
-| PWA | `@angular/pwa` |
-| Build | Angular CLI + esbuild |
-| Deploy | Cloudflare Pages |
-
-**No NgModules.** Everything standalone. No `app.module.ts`.
-
-**PostCSS integration note:** Angular 21 only reads `postcss.config.json` (not `.mjs` or `.js`). Tailwind v4's PostCSS plugin lives in `@tailwindcss/postcss`, not the main `tailwindcss` package. Both facts must hold for utilities to be generated.
-
----
-
-## Project Structure
-
+## Layout
 ```
 src/
 ├── app/
-│   ├── app.config.ts           — providers: router, APP_INITIALIZER (i18n)
-│   ├── app.routes.ts           — lazy routes for habits, personality, settings
-│   ├── app.ts                  — shell: <router-outlet> + <app-bottom-nav>
-│   ├── core/
-│   │   ├── db/
-│   │   │   └── database.service.ts
-│   │   ├── i18n/
-│   │   │   └── i18n.service.ts
-│   │   ├── models/
-│   │   │   ├── habit.model.ts
-│   │   │   └── habit-entry.model.ts
-│   │   └── utils/
-│   │       └── date.utils.ts
-│   ├── shared/
-│   │   └── components/
-│   │       ├── bottom-nav/
-│   │       ├── language-selector/
-│   │       └── page-header/
+│   ├── app.ts              — root shell + bottom nav
+│   ├── app.routes.ts       — lazy routes for habits, personality, settings
+│   ├── app.config.ts       — router + APP_INITIALIZERs + service worker
+│   └── core/               — services, models, utils
+│       ├── db/             — Dexie schema + migration helpers
+│       ├── i18n/           — translation loader signal
+│       ├── models/         — Habit & HabitEntry definitions
+│       └── utils/           — date helpers
 │   └── modules/
-│       ├── habits/
-│       │   ├── components/
-│       │   │   ├── today-view/
-│       │   │   ├── week-view/
-│       │   │   ├── habits-list/
-│       │   │   └── habit-form/
-│       │   ├── services/
-│       │   │   └── habits.service.ts
-│       │   └── habits.routes.ts
-│       ├── personality/
-│       │   ├── constants/
-│       │   │   └── dimensions.ts
-│       │   ├── engine/
-│       │   │   └── profile-engine.service.ts
-│       │   ├── components/
-│       │   │   ├── personality-view/
-│       │   │   ├── radar-chart/
-│       │   │   ├── narrative-phrase/
-│       │   │   ├── dimension-list/
-│       │   │   └── onboarding-tagging/
-│       │   └── personality.routes.ts
-│       └── settings/
-│           └── components/
-│               └── settings.component.ts
-└── assets/
-    └── i18n/
-        ├── en.json
-        └── es.json
+│       ├── habits/         — views, services, template helpers
+│       ├── personality/    — profile engine, radar, narrative, onboarding
+│       └── settings/        — template form + language selector
+├── assets/i18n/            — `en.json`, `es.json`
+├── public/                 — manifest + icons
+└── postcss.config.json     — Tailwind v4 plugin
 ```
 
----
+## Bootstrapping & routing
+- `src/main.ts` bootstraps `App` with `appConfig`.
+- `app.config.ts` wires `provideRouter(routes, withComponentInputBinding())`, registers `ngsw-worker.js` (PWA), and adds two `APP_INITIALIZER`s that await `I18nService.init()` and `HabitTemplateService.init()`.
+- The router defaults to `/habits/today` and lazy-loads the three module routes (`habits`, `personality`, `settings`). `HABITS_ROUTES` exposes `/today`, `/week`, `/list`, `/new`, `/edit/:id`; `PERSONALITY_ROUTES` maps `/` to the profile view and `/onboarding` to the tagging lane.
 
-## Data Models
+## Habits module
+### Views & UX
+- `TodayViewComponent` (`habits/components/today-view`) builds a `rows` signal of `HabitRow` objects, renders a progress bar, tracks streaks (≥2 shows a badge), and computes `nextActions()` to highlight the top three unfinished habits sorted by streak risk. Binary habits toggle with `toggleBinary`, while quantity/time habits capture numeric input and persist via `HabitsService.upsertEntry`.
+- `WeekViewComponent` pulls active habits, batches `getEntriesForHabitsInPeriod`, and populates each habit’s 7-cell row with `CellState` (`completed`, `partial`, `pending`, `nodata`). Navigation buttons move the `weekStart` signal backward or forward (forward disabled when already on the current week).
+- `HabitsListComponent` lists active habits with dimension badges, archive/delete actions (delete confirms and removes entries), and an archived section that expands/collapses. Custom templates render above the list so you can jump to `/habits/new?template=custom-<id>`.
+- `HabitFormComponent` handles new/edit forms: Reactive Forms control `name`, `type`, `unit`, `targetValue`, `dimensionPrimary`, `dimensionSecondary`, and `selectedType` toggles the view. Matching templates appear beneath the name input, templates are applied to prefill fields, and saving as a template persists via `HabitTemplateService`. Secondary dimension options exclude the primary selection via `availableSecondaryDimensions`.
 
-### `habit.model.ts`
+### Services
+- `HabitsService` (in `modules/habits/services`) exposes `getActiveHabits`, `getHabitById`, `createHabit`, `updateHabit`, `archiveHabit`, `deleteHabit`, `getTodayEntries`, `getEntriesForPeriod`, `getEntriesForHabitsInPeriod`, `upsertEntry`, `getStreaks`, and `getStreak`. `upsertEntry` uses the `[habitId+date]` compound index to avoid duplicates, and `getStreaks` builds a streak map by calling `calculateStreak`, which walks backward up to 365 days.
+- `HabitTemplateService` stores custom templates in the Dexie `customTemplates` table, exposes `templates` as a computed signal, and provides `addCustomTemplate`, `deleteCustomTemplate`, and `suggestDimensions(name: string)` (normalized tokens + keyword priors) for auto-tagging hints.
 
-```ts
-export type HabitType = 'binary' | 'quantity' | 'time'
+### Models
+- `Habit` (`core/models/habit.model.ts`): `id`, `name`, `type`, optional `unit`/`targetValue`, `dimensionPrimary`, `dimensionSecondary`, `createdAt`, `archivedAt`.
+- `HabitEntry` (`core/models/habit-entry.model.ts`): `id`, `habitId`, `date` (`YYYY-MM-DD`), `completed`, optional `value`, `createdAt`.
+- `HabitTemplate` / `StoredCustomTemplate` define the shape of template presets stored in Dexie.
 
-export type DimensionId =
-  | 'vitality' | 'recovery'
-  | 'focus' | 'creativity'
-  | 'discipline' | 'execution'
-  | 'presence' | 'autonomy'
+## Personality module
+### Constants
+`dimensions.ts` enumerates eight dimensions with `cluster`, `label`, `description`, `color`, and `examples`. This list drives badges, legend colors, and keyword examples for template detection.
 
-export interface Habit {
-  id?: number
-  name: string
-  type: HabitType
-  unit?: string
-  targetValue?: number
-  dimensionPrimary: DimensionId | null
-  dimensionSecondary: DimensionId | null
-  createdAt: Date
-  archivedAt?: Date
-}
-```
+| Dimension | Cluster | Color | Examples |
+|-----------|---------|-------|----------|
+| vitality | body | #22c55e | exercise, steps, nutrition |
+| recovery | body | #86efac | sleep, rest, stretch |
+| focus | mind | #3b82f6 | study, deep work, coding |
+| creativity | mind | #a78bfa | writing, design, music |
+| discipline | production | #f59e0b | routine, plan, organize |
+| execution | production | #f97316 | ship, deliver, publish |
+| presence | inner | #ec4899 | journaling, meditation |
+| autonomy | inner | #06b6d4 | personal projects, exploration |
 
-### `habit-entry.model.ts`
+### Profile engine
+`ProfileEngineService` computes a `PersonalityProfile` for a sliding window (7/30/90 days). Steps:
+1. Load active habits (a habit counts only if it still exists).
+2. Batch-load entries for the entire period via Dexie once and group by `habitId`.
+3. For each dimension, merge primary habits (weight 1.0) and secondary habits (weight 0.5).
+4. For each habit, calculate `adherence = (completedDays / days) * 100`, derive `confidence` from how many days were tracked (capped at 14), and pull the score toward 50% by multiplying `(adherence - 50) * confidence`.
+5. Aggregate weighted adherence/confidence, round, and include `habitsCount`.
+6. `dominantDimension` is the highest non-null score; `neglectedDimension` is the lowest score below 20.
+7. `computeProfileForEndDate` lets the UI compare the current and previous windows to compute deltas per dimension.
 
-```ts
-export interface HabitEntry {
-  id?: number
-  habitId: number
-  date: string       // 'YYYY-MM-DD'
-  completed: boolean
-  value?: number     // for quantity and time types
-  createdAt: Date
-}
-```
+### Components
+- **PersonalityView** (`personality-view.component.ts`) manages `selectedDays`, triggers the engine via `effect`, shows a loading spinner, and passes the profile to the radar, narrative, dimension list, and onboarding banner (if any habits lack a primary dimension).
+- **RadarChartComponent** draws the polar grid with D3, uses `ChangeDetectionStrategy.OnPush`, runs outside Angular, and highlights the dominant dimension’s color for the filled polygon plus the outer stroke.
+- **NarrativePhraseComponent** picks from four i18n templates: `no_habits`, `no_data`, `dominant_peak`/`dominant_base`, and optionally appends `neglected_suffix` when a weak dimension exists.
+- **DimensionListComponent** sorts scores descending (null scores last), renders percentage bars, shows deltas (`trend_up`, `trend_down`, `trend_flat`) relative to the previous window, and prints confidence as a short label.
+- **OnboardingTaggingComponent** (`/personality/onboarding`) gathers habits missing `dimensionPrimary` and updates them in batch before returning to the profile view.
 
----
+## Settings module
+- `SettingsComponent` groups language settings and the template form, lists saved templates with “use template” + delete actions, and anchors the template form with `#templates` so the habits list can link into it.
+- `TemplateFormComponent` duplicates the habit form fields, has an `autoDetectOnNameBlur` hook that only runs when the primary dimension is blank, and shows `suggestionMessage`/`message` signals after applying suggestions or saving.
+- `LanguageSelectorComponent` iterates over `[{ code: 'en', label: 'EN' }, { code: 'es', label: 'ES' }]` and toggles `I18nService.currentLang`.
 
-## Database (`database.service.ts`)
+## Shared UI
+- `BottomNavComponent` fixes a five-tab bar at the screen bottom, highlights the active route, and uses inline SVG icons with i18n labels (`nav.today`, `nav.week`, `nav.list`, `nav.profile`, `nav.settings`).
 
-```ts
-@Injectable({ providedIn: 'root' })
-export class DatabaseService extends Dexie {
-  habits!: Table<Habit, number>
-  entries!: Table<HabitEntry, number>
+## Database & migration
+`DatabaseService` extends Dexie and defines three versions:
+1. Version 1: `habits` and `entries` (no custom templates).
+2. Version 2: adds `customTemplates` table.
+3. Version 3: adds the compound `[habitId+date]` index on `entries` and runs an upgrade that keeps only the latest entry per habit/day via `getEntryIdsToKeepForUniqueHabitDate`.
 
-  constructor() {
-    super('PersonalitySuiteDB')
-    this.version(1).stores({
-      habits: '++id, name, type, dimensionPrimary, dimensionSecondary, createdAt, archivedAt',
-      entries: '++id, habitId, date, completed, createdAt',
-    })
-  }
-}
-```
+## Services & heuristics
+- `HabitTemplateService`’s `suggestDimensions` normalizes the habit name, checks for exact template matches, scores overlaps with existing templates, and falls back to the `KEYWORDS` map for each `DimensionId` (e.g., `vitality` keywords include `run`, `gym`, `steps`; `creativity` includes `write`, `drawing`, `music`). Suggestions return `DimensionSuggestion` with `primary`, optional secondary, and a `confidence` 25‑95.
+- `ProfileEngineService.getConfidence` limits required samples to `min(days, 14)` so that extremely sparse logging yields lower confidence.
+- `HabitsService.calculateStreak` walks backward from today (or yesterday if today is incomplete) and stops once a day is missed.
 
-Injected as a singleton via DI. Do not instantiate Dexie anywhere else.
+## Scripts & deployment
+- `npm start`: `ng serve --watch`.
+- `npm run watch`: watch build (`ng build --watch --configuration development`).
+- `npm run build`: production build via Angular CLI (outputs to `dist/personality-suite/browser`).
+- `npm run test`: runs `ng test`.
+- `npm run deploy`: builds and runs `wrangler deploy` (see `wrangler.jsonc` compatibility date `2026-04-03` and `assets.directory`).
+- `npm run preview`: builds and runs `wrangler dev` for local Cloudflare previews.
 
-**Schema evolution:** bump `version(N)` for any schema change. Dexie migrations are additive — no data loss if done correctly. A `[habitId+date]` compound index would improve `getEntriesForPeriod` at scale — plan it for v2.
+## Localization assets & workflow
+`I18nService.init()` runs before the app renders, loads `assets/i18n/{lang}.json` by fetching, stores the translation table in a signal, and writes the chosen language to `localStorage`. Templates use dot notation for sections (`today.*`, `week.*`, `personality.*`, `settings.*`, `dimensions.{id}.{label|description|examples}`). `LanguageSelectorComponent` calls `setLanguage` and the selector buttons rerender via the `currentLang` signal.
 
----
+## Infrastructure notes
+- `postcss.config.json` only references `@tailwindcss/postcss`, which is how Tailwind v4 ships utilities for Angular 21.
+- `provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode(), registrationStrategy: 'registerWhenStable:30000' })` ensures the worker registers once the app is stable.
+- `public/manifest.webmanifest`, `public/icons/*`, and `ngsw-config.json` keep the PWA installable.
+- `wrangler.jsonc`’s `assets.not_found_handling: "single-page-application"` mirrors Angular’s client-side routing fallbacks.
 
-## i18n System
-
-### `I18nService`
-
-- Loads `assets/i18n/{lang}.json` via `fetch` at startup (via `APP_INITIALIZER`)
-- Stores translations in a Signal — language switches trigger automatic re-renders
-- Persists chosen language in `localStorage`
-- API: `t(key, params?)` for strings, `tArr(key)` for arrays (e.g., day names)
-- Keys use dot notation: `'dimensions.vitality.label'`, `'today.progress'`
-- Interpolation: `{{variable}}` placeholders replaced from the `params` object
-
-### Adding a language
-
-1. Create `src/assets/i18n/{code}.json` — mirror the structure of `en.json`
-2. Add `{ code, label }` to the `AVAILABLE_LANGUAGES` array in `language-selector.component.ts`
-
-No code changes elsewhere are needed.
-
-### Key structure (top-level sections)
-
-`nav` · `today` · `week` · `habit_list` · `habit_form` · `personality` (includes `narrative`) · `onboarding` · `settings` · `dimensions` (label + description per dimension ID)
-
----
-
-## Habits Module
-
-### Views
-
-**TodayView** — main and default view of the app.
-- Lists all active habits for today's date
-- Each habit shows: name, type, today's status
-- Interaction by type:
-  - `binary` → tap to toggle completed/pending
-  - `quantity` / `time` → numeric input + unit + confirm button
-- Global progress bar: "X / Y habits completed today"
-- Streak badge (🔥 N) shown when streak ≥ 2
-
-**WeekView**
-- 7-column grid (Mon–Sun) × N rows (one habit per row)
-- Day labels come from `i18n.tArr('week.days')` — locale-aware
-- Cell states: completed (solid green) / partial (muted green, quantity/time only) / pending (empty) / no data (grey)
-- Current week by default, navigate backwards; forward navigation disabled on current week
-- Read-only
-
-**HabitsList**
-- Active habits with name, type, primary dimension badge
-- Per-habit actions: edit, archive, delete (delete requires confirmation and removes all entries)
-- Archived section collapsed by default
-
-**HabitForm** (create / edit)
-- Fields: name, type, unit + target (if quantity/time), primary dimension (required), secondary dimension (optional)
-- Secondary dimension excludes the selected primary — computed via `availableSecondaryDimensions` Signal
-- Edit mode pre-populates via `ActivatedRoute` param + `HabitsService.getHabitById`
-
-### Business Logic (`habits.service.ts`)
-
-```ts
-getActiveHabits(): Promise<Habit[]>
-getArchivedHabits(): Promise<Habit[]>
-getHabitById(id: number): Promise<Habit | undefined>
-createHabit(data: Omit<Habit, 'id' | 'createdAt'>): Promise<number>
-updateHabit(id: number, data: Partial<Habit>): Promise<void>
-archiveHabit(id: number): Promise<void>
-deleteHabit(id: number): Promise<void>          // removes habit + all entries
-
-getTodayEntries(date: string): Promise<HabitEntry[]>
-getEntriesForPeriod(habitId: number, from: string, to: string): Promise<HabitEntry[]>
-upsertEntry(habitId: number, date: string, data: Partial<HabitEntry>): Promise<void>
-getStreak(habit: Habit): Promise<number>
-```
-
-Rules:
-- Prefer archiving over deleting. `deleteHabit` is for emergency cleanup only.
-- `upsertEntry`: query existing entry first, preserve `id` on update.
-- `date` always in `'YYYY-MM-DD'` format.
-- `getStreak`: walk backwards from yesterday (or today if already completed), count consecutive completed days.
-
----
-
-## Personality Module
-
-### The 8 Dimensions (`dimensions.ts`)
-
-| ID | Cluster | Color |
-|---|---|---|
-| `vitality` | body | `#22c55e` |
-| `recovery` | body | `#86efac` |
-| `focus` | mind | `#3b82f6` |
-| `creativity` | mind | `#a78bfa` |
-| `discipline` | production | `#f59e0b` |
-| `execution` | production | `#f97316` |
-| `presence` | inner | `#ec4899` |
-| `autonomy` | inner | `#06b6d4` |
-
-Labels and descriptions are defined in `i18n` JSON, not hardcoded in `dimensions.ts`. Use `i18n.t('dimensions.{id}.label')` wherever a label is displayed.
-
-### Profile Engine (`profile-engine.service.ts`)
-
-Pure service. No side effects. Deterministic logic.
-
-**Scoring algorithm per dimension:**
-
-```
-1. Filter active habits where dimensionPrimary === D or dimensionSecondary === D
-2. Batch-load all entries for the period in one Dexie query (avoids N+1)
-3. For each habit, adherence = (days completed / days in period) * 100
-4. Weight: dimensionPrimary = 1.0, dimensionSecondary = 0.5
-5. Score D = weighted average → value 0–100
-6. If no habits assigned to D → score = null
-```
-
-`dominantDimension`: highest non-null score.
-`neglectedDimension`: lowest non-null score below 20 (can be null).
-
-### Narrative Phrase
-
-No LLM. Deterministic templates from `i18n`. Priority:
-
-1. `totalHabitsTagged === 0` → `personality.narrative.no_habits`
-2. `dominantScore > 85` → `personality.narrative.dominant_peak` (`{{label}}`)
-3. Base case → `personality.narrative.dominant_base` (`{{label}}`)
-4. If `neglectedDimension` → append `personality.narrative.neglected_suffix` (`{{label}}`)
-
-Tone: observational. No motivation, no emojis, no exclamation marks.
-
-### PersonalityView — Layout
-
-```
-├── Header (i18n title + 7d / 30d / 90d period selector)
-├── RadarChart (SVG — null axes in grey at 0.3 opacity)
-├── NarrativePhrase
-├── DimensionList (score desc, nulls last)
-└── OnboardingBanner (if totalHabitsUntagged > 0)
-```
-
-Period selector updates profile via `effect()` reacting to a `signal<7 | 30 | 90>`.
-
-### RadarChart
-
-D3.js on SVG. Key contracts:
-- `ChangeDetectionStrategy.OnPush` — Angular does not touch the SVG
-- All D3 code runs inside `ngZone.runOutsideAngular()`
-- Render triggered by `ngAfterViewInit` (first) and `ngOnChanges` (updates)
-- Null scores plot at 0, axis rendered in `#334155` at 0.3 opacity
-- Filled polygon uses `dominantDimension` color at 0.15 fill opacity
-
----
-
-## Navigation
-
-Bottom nav with 5 items:
-
-| Label | Route |
-|---|---|
-| Today | `/habits/today` |
-| Week | `/habits/week` |
-| List | `/habits/list` |
-| Profile | `/personality` |
-| Settings | `/settings` |
-
-Default route: `/habits/today`
-
-### Settings
-
-`SettingsComponent` at `/settings` embeds `LanguageSelectorComponent`. Language choice persists in `localStorage` and is restored via `APP_INITIALIZER` before first render.
-
----
-
-## Project Rules
-
-- **Offline-first.** Zero network calls. Everything in Dexie/IndexedDB.
-- **Standalone components.** No NgModules.
-- **Angular Signals** for UI state. RxJS only where idiomatic.
-- **Strict TypeScript.** `strict: true`. No `any`.
-- **Tailwind for styles.** No component CSS except the radar SVG.
-- **No new dependencies** without explicit justification.
-- **One service per responsibility.**
-- **i18n all user-visible strings.** No hardcoded UI text in templates. Keys live in `assets/i18n/*.json`.
-- **Prefer archiving over deleting.** `deleteHabit` exists but is destructive — confirm before use.

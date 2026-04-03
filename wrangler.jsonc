@@ -1,15 +1,22 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "personality-suite",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-04-03",
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "personality-suite",
+      "database_id": "0360997e-2874-493c-bc95-8c0d8224af8e",
+      "migrations_dir": "migrations",
+    },
+  ],
   "assets": {
     "directory": "dist/personality-suite/browser",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
   },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+  "compatibility_flags": ["nodejs_compat"],
 }
