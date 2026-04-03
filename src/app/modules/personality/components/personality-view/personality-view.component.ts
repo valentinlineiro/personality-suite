@@ -5,6 +5,8 @@ import { RadarChartComponent } from '../radar-chart/radar-chart.component'
 import { NarrativePhraseComponent } from '../narrative-phrase/narrative-phrase.component'
 import { DimensionListComponent } from '../dimension-list/dimension-list.component'
 import { I18nService } from '../../../../core/i18n/i18n.service'
+import { addDays } from '../../../../core/utils/date.utils'
+import { DimensionId } from '../../../../core/models/habit.model'
 
 @Component({
   selector: 'app-personality-view',
@@ -49,8 +51,8 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
           <h2 class="text-sm text-slate-500 uppercase tracking-wider mb-1">
             {{ i18n.t('personality.dimensions_title') }}
           </h2>
-          <p class="text-[11px] text-slate-500 mb-3">{{ i18n.t('personality.confidence_hint') }}</p>
-          <app-dimension-list [scores]="profile()!.scores" />
+          <p class="text-[11px] text-slate-500 mb-3">{{ i18n.t('personality.trend_hint') }}</p>
+          <app-dimension-list [scores]="profile()!.scores" [deltas]="deltas()" />
         </div>
 
         <!-- Onboarding banner -->
@@ -75,6 +77,7 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
 export class PersonalityViewComponent {
   selectedDays = signal<7 | 30 | 90>(7)
   profile = signal<PersonalityProfile | null>(null)
+  previousProfile = signal<PersonalityProfile | null>(null)
   loading = signal(false)
 
   periodOptions = [
@@ -83,6 +86,8 @@ export class PersonalityViewComponent {
     { days: 90 as const, label: 'personality.period_90d' },
   ]
 
+  deltas = signal<Partial<Record<DimensionId, number | null>>>({})
+
   constructor(
     private engine: ProfileEngineService,
     public i18n: I18nService,
@@ -90,13 +95,34 @@ export class PersonalityViewComponent {
     effect(() => {
       const days = this.selectedDays()
       this.loading.set(true)
-      this.engine.computeProfile(days)
-        .then(p => this.profile.set(p))
+      Promise.all([
+        this.engine.computeProfile(days),
+        this.engine.computeProfileForEndDate(days, addDays(new Date(), -days)),
+      ])
+        .then(([current, previous]) => {
+          this.profile.set(current)
+          this.previousProfile.set(previous)
+          this.deltas.set(this.computeDeltas(current, previous))
+        })
         .finally(() => this.loading.set(false))
     })
   }
 
   setPeriod(days: 7 | 30 | 90): void {
     this.selectedDays.set(days)
+  }
+
+  private computeDeltas(
+    current: PersonalityProfile,
+    previous: PersonalityProfile,
+  ): Partial<Record<DimensionId, number | null>> {
+    const previousByDimension = new Map(previous.scores.map(s => [s.dimensionId, s.score]))
+    const next: Partial<Record<DimensionId, number | null>> = {}
+
+    for (const score of current.scores) {
+      const prev = previousByDimension.get(score.dimensionId)
+      next[score.dimensionId] = score.score === null || prev == null ? null : score.score - prev
+    }
+    return next
   }
 }

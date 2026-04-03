@@ -13,6 +13,12 @@ interface HabitRow {
   inputValue: string
 }
 
+interface NextAction {
+  habitId: number
+  title: string
+  reason: string
+}
+
 @Component({
   selector: 'app-today-view',
   standalone: true,
@@ -47,6 +53,28 @@ interface HabitRow {
 
       <!-- Habit list -->
       <div class="px-4 space-y-2">
+        @if (nextActions().length > 0) {
+          <div class="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 mb-2">
+            <p class="text-xs uppercase tracking-wider text-blue-300 mb-2">
+              {{ i18n.t('today.next_actions_title') }}
+            </p>
+            <div class="space-y-2">
+              @for (action of nextActions(); track action.habitId) {
+                <a [href]="'#habit-' + action.habitId"
+                  class="block rounded-lg bg-slate-900/60 px-3 py-2 hover:bg-slate-900 transition-colors">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <p class="text-sm text-white">{{ action.title }}</p>
+                      <p class="text-xs text-slate-400">{{ action.reason }}</p>
+                    </div>
+                    <span class="text-xs text-blue-300">{{ i18n.t('today.next_actions_cta') }}</span>
+                  </div>
+                </a>
+              }
+            </div>
+          </div>
+        }
+
         @if (rows().length === 0) {
           <div class="text-center py-16">
             <p class="text-slate-500 mb-4">{{ i18n.t('today.empty') }}</p>
@@ -58,6 +86,7 @@ interface HabitRow {
 
         @for (row of rows(); track row.habit.id) {
           <div class="bg-slate-800 rounded-xl px-4 py-3"
+            [attr.id]="'habit-' + row.habit.id"
             [class.ring-1]="isCompleted(row)"
             [class.ring-emerald-500]="isCompleted(row)">
 
@@ -133,6 +162,20 @@ export class TodayViewComponent implements OnInit {
   progressPct = computed(() => {
     const total = this.rows().length
     return total === 0 ? 0 : Math.round((this.completedCount() / total) * 100)
+  })
+  nextActions = computed(() => {
+    const candidates = this.rows()
+      .filter(r => r.habit.id != null && !this.isCompleted(r))
+      .sort((a, b) => b.streak - a.streak)
+      .slice(0, 3)
+
+    return candidates.map(row => ({
+      habitId: row.habit.id!,
+      title: row.habit.name,
+      reason: row.streak >= 2
+        ? this.i18n.t('today.next_actions_streak_risk', { streak: row.streak })
+        : this.i18n.t('today.next_actions_log_pending'),
+    } satisfies NextAction))
   })
 
   constructor(

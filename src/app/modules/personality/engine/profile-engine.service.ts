@@ -30,7 +30,10 @@ export class ProfileEngineService {
   ) {}
 
   async computeProfile(days: number): Promise<PersonalityProfile> {
-    const to = new Date()
+    return this.computeProfileForEndDate(days, new Date())
+  }
+
+  async computeProfileForEndDate(days: number, to: Date): Promise<PersonalityProfile> {
     const from = addDays(to, -(days - 1))
     const fromStr = toDateString(from)
     const toStr = toDateString(to)
