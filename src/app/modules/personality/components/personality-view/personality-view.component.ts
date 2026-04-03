@@ -4,6 +4,7 @@ import { ProfileEngineService, PersonalityProfile } from '../../engine/profile-e
 import { RadarChartComponent } from '../radar-chart/radar-chart.component'
 import { NarrativePhraseComponent } from '../narrative-phrase/narrative-phrase.component'
 import { DimensionListComponent } from '../dimension-list/dimension-list.component'
+import { I18nService } from '../../../../core/i18n/i18n.service'
 
 @Component({
   selector: 'app-personality-view',
@@ -14,7 +15,7 @@ import { DimensionListComponent } from '../dimension-list/dimension-list.compone
       <!-- Header -->
       <div class="px-4 pt-8 pb-4">
         <div class="flex items-center justify-between mb-4">
-          <h1 class="text-xl font-semibold text-white">Active Identity</h1>
+          <h1 class="text-xl font-semibold text-white">{{ i18n.t('personality.title') }}</h1>
         </div>
         <!-- Period selector -->
         <div class="flex gap-2">
@@ -22,7 +23,7 @@ import { DimensionListComponent } from '../dimension-list/dimension-list.compone
             <button (click)="setPeriod(opt.days)"
               class="flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors"
               [class]="selectedDays() === opt.days ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'">
-              {{ opt.label }}
+              {{ i18n.t(opt.label) }}
             </button>
           }
         </div>
@@ -45,7 +46,10 @@ import { DimensionListComponent } from '../dimension-list/dimension-list.compone
 
         <!-- Dimension list -->
         <div class="px-4 mt-5">
-          <h2 class="text-sm text-slate-500 uppercase tracking-wider mb-3">Dimensions</h2>
+          <h2 class="text-sm text-slate-500 uppercase tracking-wider mb-1">
+            {{ i18n.t('personality.dimensions_title') }}
+          </h2>
+          <p class="text-[11px] text-slate-500 mb-3">{{ i18n.t('personality.confidence_hint') }}</p>
           <app-dimension-list [scores]="profile()!.scores" />
         </div>
 
@@ -53,12 +57,14 @@ import { DimensionListComponent } from '../dimension-list/dimension-list.compone
         @if (profile()!.totalHabitsUntagged > 0) {
           <div class="mx-4 mt-5 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 flex items-center justify-between">
             <div>
-              <p class="text-amber-400 text-sm font-medium">{{ profile()!.totalHabitsUntagged }} untagged habits</p>
-              <p class="text-amber-500/70 text-xs">Tag them to improve your profile accuracy.</p>
+              <p class="text-amber-400 text-sm font-medium">
+                {{ i18n.t('personality.untagged_title', { count: profile()!.totalHabitsUntagged }) }}
+              </p>
+              <p class="text-amber-500/70 text-xs">{{ i18n.t('personality.untagged_desc') }}</p>
             </div>
             <a routerLink="/personality/onboarding"
               class="text-amber-400 text-sm font-medium hover:text-amber-300 transition-colors">
-              Tag →
+              {{ i18n.t('personality.untagged_cta') }}
             </a>
           </div>
         }
@@ -72,12 +78,15 @@ export class PersonalityViewComponent {
   loading = signal(false)
 
   periodOptions = [
-    { days: 7 as const, label: '7d' },
-    { days: 30 as const, label: '30d' },
-    { days: 90 as const, label: '90d' },
+    { days: 7 as const, label: 'personality.period_7d' },
+    { days: 30 as const, label: 'personality.period_30d' },
+    { days: 90 as const, label: 'personality.period_90d' },
   ]
 
-  constructor(private engine: ProfileEngineService) {
+  constructor(
+    private engine: ProfileEngineService,
+    public i18n: I18nService,
+  ) {
     effect(() => {
       const days = this.selectedDays()
       this.loading.set(true)

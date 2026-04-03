@@ -1,6 +1,7 @@
 import { Component, Input, computed, signal } from '@angular/core'
 import { DimensionScore } from '../../engine/profile-engine.service'
 import { getDimension } from '../../constants/dimensions'
+import { I18nService } from '../../../../core/i18n/i18n.service'
 
 @Component({
   selector: 'app-dimension-list',
@@ -20,10 +21,15 @@ import { getDimension } from '../../constants/dimensions'
               </div>
             }
           </div>
-          <span class="text-xs w-8 text-right"
-            [class]="item.score !== null ? 'text-slate-400' : 'text-slate-600'">
-            {{ item.score !== null ? item.score + '%' : '—' }}
-          </span>
+          <div class="w-16 text-right leading-tight">
+            <p class="text-xs"
+              [class]="item.score !== null ? 'text-slate-400' : 'text-slate-600'">
+              {{ item.score !== null ? item.score + '%' : '—' }}
+            </p>
+            @if (item.confidence !== null) {
+              <p class="text-[10px] text-slate-500">{{ confidenceLabel(item.confidence) }}</p>
+            }
+          </div>
         </div>
       }
     </div>
@@ -31,6 +37,8 @@ import { getDimension } from '../../constants/dimensions'
 })
 export class DimensionListComponent {
   private _scores = signal<DimensionScore[]>([])
+
+  constructor(public i18n: I18nService) {}
 
   @Input() set scores(v: DimensionScore[]) {
     this._scores.set(v)
@@ -46,10 +54,14 @@ export class DimensionListComponent {
   )
 
   label(id: string): string {
-    return getDimension(id as any)?.label ?? id
+    return this.i18n.t(`dimensions.${id}.label`)
   }
 
   color(id: string): string {
     return getDimension(id as any)?.color ?? '#94a3b8'
+  }
+
+  confidenceLabel(value: number): string {
+    return this.i18n.t('personality.confidence_short', { value })
   }
 }

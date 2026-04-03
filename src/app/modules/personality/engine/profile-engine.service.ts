@@ -10,6 +10,7 @@ export interface DimensionScore {
   dimensionId: DimensionId
   score: number | null
   habitsCount: number
+  confidence: number | null
 }
 
 export interface PersonalityProfile {
@@ -57,7 +58,7 @@ export class ProfileEngineService {
       const secondary = habits.filter(h => h.dimensionSecondary === dim.id)
 
       if (primary.length === 0 && secondary.length === 0) {
-        return { dimensionId: dim.id, score: null, habitsCount: 0 }
+        return { dimensionId: dim.id, score: null, habitsCount: 0, confidence: null }
       }
 
       const weightedSum = [
@@ -67,24 +68,32 @@ export class ProfileEngineService {
 
       let totalWeight = 0
       let weightedAdherence = 0
+      let weightedConfidence = 0
 
       for (const { habit, weight } of weightedSum) {
         const entries = entriesByHabit.get(habit.id!) ?? []
+        const trackedDays = entries.length
         const completed = entries.filter(e => {
           if (habit.type === 'binary') return e.completed
           return (e.value ?? 0) >= (habit.targetValue ?? 1)
         }).length
         const adherence = (completed / days) * 100
-        weightedAdherence += adherence * weight
+        const confidence = this.getConfidence(days, trackedDays)
+        // Keep sparse data from causing extreme swings by pulling toward neutral.
+        const adjustedAdherence = 50 + ((adherence - 50) * confidence)
+        weightedAdherence += adjustedAdherence * weight
+        weightedConfidence += confidence * weight
         totalWeight += weight
       }
 
       const score = totalWeight > 0 ? Math.round(weightedAdherence / totalWeight) : null
+      const confidence = totalWeight > 0 ? Math.round((weightedConfidence / totalWeight) * 100) : null
 
       return {
         dimensionId: dim.id,
         score,
         habitsCount: primary.length + secondary.length,
+        confidence,
       }
     })
 
@@ -106,5 +115,11 @@ export class ProfileEngineService {
       totalHabitsTagged,
       totalHabitsUntagged,
     }
+  }
+
+  private getConfidence(days: number, trackedDays: number): number {
+    const requiredSamples = Math.min(days, 14)
+    if (requiredSamples <= 0) return 1
+    return Math.min(1, trackedDays / requiredSamples)
   }
 }

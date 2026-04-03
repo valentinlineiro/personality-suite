@@ -130,15 +130,21 @@ export class WeekViewComponent implements OnInit {
     const dates = this.weekDates()
     const from = toDateString(dates[0])
     const to = toDateString(dates[6])
-
-    const allEntries = await Promise.all(
-      this.habits.map(h => this.habitsService.getEntriesForPeriod(h.id!, from, to))
-    )
+    const habitIds = this.habits
+      .map(h => h.id)
+      .filter((id): id is number => id != null)
+    const allEntries = await this.habitsService.getEntriesForHabitsInPeriod(habitIds, from, to)
+    const entriesByHabit = new Map<number, HabitEntry[]>()
+    for (const entry of allEntries) {
+      const list = entriesByHabit.get(entry.habitId)
+      if (list) list.push(entry)
+      else entriesByHabit.set(entry.habitId, [entry])
+    }
 
     this.rows.set(
-      this.habits.map((habit, hi) => {
+      this.habits.map(habit => {
         const entryMap = new Map<string, HabitEntry>()
-        for (const e of allEntries[hi]) entryMap.set(e.date, e)
+        for (const e of entriesByHabit.get(habit.id!) ?? []) entryMap.set(e.date, e)
         const cells: CellState[] = dates.map(d => {
           const ds = toDateString(d)
           const entry = entryMap.get(ds)

@@ -51,10 +51,23 @@ export class HabitsService {
       .toArray()
   }
 
+  async getEntriesForHabitsInPeriod(
+    habitIds: number[],
+    from: string,
+    to: string,
+  ): Promise<HabitEntry[]> {
+    if (habitIds.length === 0) return []
+    const idSet = new Set(habitIds)
+    return this.db.entries
+      .where('date')
+      .between(from, to, true, true)
+      .filter(e => idSet.has(e.habitId))
+      .toArray()
+  }
+
   async upsertEntry(habitId: number, date: string, data: Partial<HabitEntry>): Promise<void> {
     const existing = await this.db.entries
-      .where('habitId').equals(habitId)
-      .filter(e => e.date === date)
+      .where('[habitId+date]').equals([habitId, date])
       .first()
 
     if (existing?.id != null) {
@@ -70,36 +83,59 @@ export class HabitsService {
     }
   }
 
-  async getStreak(habit: Habit): Promise<number> {
-    const today = toDateString(new Date())
+  async getStreaks(habits: Habit[]): Promise<Map<number, number>> {
+    const habitsWithIds = habits.filter((h): h is Habit & { id: number } => h.id != null)
+    if (habitsWithIds.length === 0) return new Map()
+
+    const habitIds = habitsWithIds.map(h => h.id)
     const entries = await this.db.entries
-      .where('habitId').equals(habit.id!)
+      .where('habitId')
+      .anyOf(habitIds)
       .toArray()
 
-    const entryMap = new Map<string, HabitEntry>()
-    for (const e of entries) entryMap.set(e.date, e)
-
-    const isCompleted = (e: HabitEntry | undefined): boolean => {
-      if (!e) return false
-      if (habit.type === 'binary') return e.completed
-      return (e.value ?? 0) >= (habit.targetValue ?? 1)
+    const entriesByHabit = new Map<number, HabitEntry[]>()
+    for (const entry of entries) {
+      const list = entriesByHabit.get(entry.habitId)
+      if (list) list.push(entry)
+      else entriesByHabit.set(entry.habitId, [entry])
     }
 
-    // Start from today if completed, otherwise from yesterday
-    const todayEntry = entryMap.get(today)
-    const startFromToday = isCompleted(todayEntry)
+    const streaks = new Map<number, number>()
+    for (const habit of habitsWithIds) {
+      streaks.set(habit.id, this.calculateStreak(habit, entriesByHabit.get(habit.id) ?? []))
+    }
+    return streaks
+  }
 
+  async getStreak(habit: Habit): Promise<number> {
+    if (habit.id == null) return 0
+    const entries = await this.db.entries.where('habitId').equals(habit.id).toArray()
+    return this.calculateStreak(habit, entries)
+  }
+
+  private calculateStreak(habit: Habit, entries: HabitEntry[]): number {
+    const today = toDateString(new Date())
+    const entryMap = new Map<string, HabitEntry>()
+    for (const entry of entries) entryMap.set(entry.date, entry)
+
+    const isCompleted = (entry: HabitEntry | undefined): boolean => {
+      if (!entry) return false
+      if (habit.type === 'binary') return entry.completed
+      return (entry.value ?? 0) >= (habit.targetValue ?? 1)
+    }
+
+    // Start from today if completed, otherwise from yesterday.
+    const startFromToday = isCompleted(entryMap.get(today))
     let streak = 0
     const d = new Date()
     if (!startFromToday) d.setDate(d.getDate() - 1)
 
     for (let i = 0; i < 365; i++) {
-      const ds = toDateString(d)
-      if (!isCompleted(entryMap.get(ds))) break
+      const dateString = toDateString(d)
+      if (!isCompleted(entryMap.get(dateString))) break
       streak++
       d.setDate(d.getDate() - 1)
     }
-
     return streak
   }
 }

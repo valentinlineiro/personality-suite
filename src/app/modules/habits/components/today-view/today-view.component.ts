@@ -153,13 +153,13 @@ export class TodayViewComponent implements OnInit {
     const entryMap = new Map<number, HabitEntry>()
     for (const e of entries) entryMap.set(e.habitId, e)
 
-    const streaks = await Promise.all(habits.map(h => this.habitsService.getStreak(h)))
+    const streaks = await this.habitsService.getStreaks(habits)
 
     this.rows.set(
-      habits.map((habit, i) => ({
+      habits.map(habit => ({
         habit,
         entry: entryMap.get(habit.id!) ?? null,
-        streak: streaks[i],
+        streak: habit.id != null ? (streaks.get(habit.id) ?? 0) : 0,
         inputValue: String(entryMap.get(habit.id!)?.value ?? ''),
       }))
     )
