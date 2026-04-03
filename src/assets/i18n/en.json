@@ -51,6 +51,8 @@
     "dimension_secondary_optional": "(optional)",
     "save": "Save Changes",
     "create": "Create Habit",
+    "save_as_template": "Save as template",
+    "template_saved": "Template saved!",
     "validation_name": "Name is required.",
     "validation_type": "Type is required.",
     "validation_dimension": "Primary dimension is required."
@@ -87,14 +89,15 @@
   "settings_templates": {
     "templates_title": "Habit templates",
     "templates_description": "Keep custom suggestions here and reuse them whenever you start typing a familiar habit name.",
-    "templates_empty": "No custom templates yet."
+    "templates_empty": "No custom templates yet.",
+    "save_template": "Save template"
   },
   "habit_template": {
     "duolingo": {
       "name": "Duolingo lesson",
       "description": "Short language practice block (15 min)."
     },
-    "morning_run": {
+    "morning-run": {
       "name": "Morning run",
       "description": "Light cardio first thing in the morning."
     },
@@ -106,11 +109,11 @@
       "name": "Journal entry",
       "description": "Daily reflection entry."
     },
-    "read_pages": {
+    "read-pages": {
       "name": "Read 20 pages",
       "description": "Quantity goal for reading."
     },
-    "ship": {
+    "ship-progress": {
       "name": "Ship progress",
       "description": "One hour block for execution work."
     }

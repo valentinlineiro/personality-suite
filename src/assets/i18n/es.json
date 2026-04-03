@@ -51,6 +51,8 @@
     "dimension_secondary_optional": "(opcional)",
     "save": "Guardar cambios",
     "create": "Crear hábito",
+    "save_as_template": "Guardar como plantilla",
+    "template_saved": "¡Plantilla guardada!",
     "validation_name": "El nombre es obligatorio.",
     "validation_type": "El tipo es obligatorio.",
     "validation_dimension": "La dimensión primaria es obligatoria."
@@ -87,14 +89,15 @@
   "settings_templates": {
     "templates_title": "Plantillas",
     "templates_description": "Guarda sugerencias personalizadas aquí y reutilízalas cuando escribas un hábito similar.",
-    "templates_empty": "Aún no hay plantillas personalizadas."
+    "templates_empty": "Aún no hay plantillas personalizadas.",
+    "save_template": "Guardar plantilla"
   },
   "habit_template": {
     "duolingo": {
       "name": "Lección de Duolingo",
       "description": "Bloque corto de práctica lingüística (15 min)."
     },
-    "morning_run": {
+    "morning-run": {
       "name": "Carrera matutina",
       "description": "Cardio ligero al principio del día."
     },
@@ -106,11 +109,11 @@
       "name": "Escribir en el diario",
       "description": "Entrada diaria de reflexión."
     },
-    "read_pages": {
+    "read-pages": {
       "name": "Leer 20 páginas",
       "description": "Meta de cantidad para la lectura."
     },
-    "ship": {
+    "ship-progress": {
       "name": "Avance en proyecto",
       "description": "Bloque de una hora para ejecución."
     }

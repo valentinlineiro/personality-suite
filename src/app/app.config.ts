@@ -4,6 +4,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 import { I18nService } from './core/i18n/i18n.service';
+import { HabitTemplateService } from './modules/habits/services/habit-template.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,6 +14,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: (i18n: I18nService) => () => i18n.init(),
       deps: [I18nService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (templates: HabitTemplateService) => () => templates.init(),
+      deps: [HabitTemplateService],
       multi: true,
     },
     provideServiceWorker('ngsw-worker.js', {

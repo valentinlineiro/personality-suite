@@ -25,23 +25,9 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
         </h1>
       </div>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-4 space-y-5">
-    <div class="space-y-2">
-      <p class="text-xs text-slate-400 uppercase tracking-widest">Common templates</p>
-      <div class="flex flex-wrap gap-2">
-        @for (template of habitTemplates(); track template.id) {
-          <button
-            type="button"
-            (click)="applyTemplate(template)"
-            [attr.title]="templateDescription(template)"
-            class="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-colors">
-            {{ templateLabel(template) }}
-          </button>
-        }
-      </div>
-    </div>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-4 space-y-5">
 
-        <!-- Name -->
+        <!-- Name + inline suggestions -->
         <div>
           <label class="block text-sm text-slate-400 mb-1">{{ i18n.t('habit_form.name_label') }}</label>
           <input formControlName="name" type="text"
@@ -54,8 +40,9 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
             <div class="mt-3 space-y-2">
               <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Suggestions</p>
               <div class="flex flex-wrap gap-2">
-                @for (template of matchingTemplates(); track template.id) {
+                @for (template of matchingTemplates(); track template.key) {
                   <button type="button" (click)="applyTemplate(template)"
+                    [attr.title]="templateDescription(template)"
                     class="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-colors">
                     {{ templateLabel(template) }}
                   </button>
@@ -89,9 +76,9 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
               <label class="block text-sm text-slate-400 mb-1">
                 {{ selectedType() === 'time' ? i18n.t('habit_form.unit_label_time') : i18n.t('habit_form.unit_label_quantity') }}
               </label>
-            <input formControlName="unit" type="text"
-              class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500"
-              [placeholder]="unitPlaceholder()" />
+              <input formControlName="unit" type="text"
+                class="w-full bg-slate-800 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-500"
+                [placeholder]="unitPlaceholder()" />
             </div>
             <div class="flex-1">
               <label class="block text-sm text-slate-400 mb-1">{{ i18n.t('habit_form.target_label') }}</label>
@@ -138,6 +125,19 @@ import { I18nService } from '../../../../core/i18n/i18n.service'
           {{ editId() ? i18n.t('habit_form.save') : i18n.t('habit_form.create') }}
         </button>
 
+        <!-- Save as template -->
+        @if (canSaveAsTemplate()) {
+          <div class="flex items-center gap-3">
+            <button type="button" (click)="saveAsTemplate()"
+              class="flex-1 py-2 rounded-xl text-sm font-medium border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white transition-colors">
+              {{ i18n.t('habit_form.save_as_template') }}
+            </button>
+            @if (templateSaved()) {
+              <span class="text-xs text-emerald-400">{{ i18n.t('habit_form.template_saved') }}</span>
+            }
+          </div>
+        }
+
       </form>
     </div>
   `,
@@ -149,17 +149,24 @@ export class HabitFormComponent implements OnInit {
   editId = signal<number | null>(null)
   selectedType = signal<HabitType>('binary')
   nameQuery = signal('')
-  habitTemplates = computed(() => this.habitTemplateService.templates())
+  templateSaved = signal(false)
+
   matchingTemplates = computed(() => {
     const query = this.nameQuery()
     if (!query) return []
-    return this.habitTemplates()
-      .filter((template: HabitTemplate) => template.name.toLowerCase().includes(query))
+    return this.habitTemplateService.templates()
+      .filter((t: HabitTemplate) => t.name.toLowerCase().includes(query))
   })
 
   availableSecondaryDimensions = computed(() =>
     DIMENSIONS.filter(d => d.id !== this.form.get('dimensionPrimary')?.value)
   )
+
+  canSaveAsTemplate = computed(() => {
+    const name = this.nameQuery()
+    const dim = this.form.get('dimensionPrimary')?.value
+    return name.length > 0 && !!dim
+  })
 
   constructor(
     private fb: FormBuilder,
@@ -181,6 +188,7 @@ export class HabitFormComponent implements OnInit {
     const nameControl = this.form.get('name')
     nameControl!.valueChanges.subscribe(value => {
       this.nameQuery.set((value ?? '').trim().toLowerCase())
+      this.templateSaved.set(false)
     })
     this.nameQuery.set((nameControl!.value ?? '').trim().toLowerCase())
 
@@ -218,11 +226,17 @@ export class HabitFormComponent implements OnInit {
   }
 
   templateLabel(template: HabitTemplate): string {
-    return this.i18n.t(template.labelKey ?? '') || template.name
+    if (template.isBuiltIn) {
+      return this.i18n.t(`habit_template.${template.key}.name`) || template.name
+    }
+    return template.name
   }
 
   templateDescription(template: HabitTemplate): string {
-    return this.i18n.t(template.descriptionKey ?? '') || template.description || ''
+    if (template.isBuiltIn) {
+      return this.i18n.t(`habit_template.${template.key}.description`) || template.description || ''
+    }
+    return template.description || ''
   }
 
   unitPlaceholder(): string {
@@ -247,6 +261,23 @@ export class HabitFormComponent implements OnInit {
 
   dimLabel(id: string): string {
     return this.i18n.t(`dimensions.${id}.label`) || id
+  }
+
+  async saveAsTemplate(): Promise<void> {
+    const { name, type, unit, targetValue, dimensionPrimary, dimensionSecondary } = this.form.value
+    if (!name || !dimensionPrimary) return
+    await this.habitTemplateService.addCustomTemplate({
+      name,
+      habit: {
+        name,
+        type,
+        unit: unit || undefined,
+        targetValue: targetValue ?? undefined,
+        dimensionPrimary: dimensionPrimary as DimensionId,
+        dimensionSecondary: (dimensionSecondary as DimensionId) ?? null,
+      },
+    })
+    this.templateSaved.set(true)
   }
 
   async onSubmit(): Promise<void> {

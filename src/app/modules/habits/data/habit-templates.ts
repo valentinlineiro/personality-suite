@@ -1,11 +1,11 @@
 import { HabitTemplate } from '../models/habit-template.model'
 
-export const HABIT_TEMPLATES: HabitTemplate[] = [
+export const BUILT_IN_TEMPLATES: HabitTemplate[] = [
   {
-    id: 'duolingo',
+    key: 'duolingo',
     name: 'Duolingo lesson',
-    labelKey: 'habit_template.duolingo.name',
-    descriptionKey: 'habit_template.duolingo.description',
+    description: 'Short language practice block (15 min).',
+    isBuiltIn: true,
     habit: {
       name: 'Duolingo lesson',
       type: 'time',
@@ -16,10 +16,10 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     },
   },
   {
-    id: 'morning-run',
+    key: 'morning-run',
     name: 'Morning run',
-    labelKey: 'habit_template.morning_run.name',
-    descriptionKey: 'habit_template.morning_run.description',
+    description: 'Light cardio first thing in the morning.',
+    isBuiltIn: true,
     habit: {
       name: 'Morning run',
       type: 'time',
@@ -30,10 +30,10 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     },
   },
   {
-    id: 'meditation',
+    key: 'meditation',
     name: 'Meditation',
-    labelKey: 'habit_template.meditation.name',
-    descriptionKey: 'habit_template.meditation.description',
+    description: 'Focused presence work (10 min).',
+    isBuiltIn: true,
     habit: {
       name: 'Meditation',
       type: 'time',
@@ -44,10 +44,10 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     },
   },
   {
-    id: 'journal',
+    key: 'journal',
     name: 'Journal entry',
-    labelKey: 'habit_template.journal.name',
-    descriptionKey: 'habit_template.journal.description',
+    description: 'Daily reflection entry.',
+    isBuiltIn: true,
     habit: {
       name: 'Journal entry',
       type: 'binary',
@@ -56,10 +56,10 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     },
   },
   {
-    id: 'read-pages',
+    key: 'read-pages',
     name: 'Read 20 pages',
-    labelKey: 'habit_template.read_pages.name',
-    descriptionKey: 'habit_template.read_pages.description',
+    description: 'Quantity goal for reading.',
+    isBuiltIn: true,
     habit: {
       name: 'Read 20 pages',
       type: 'quantity',
@@ -70,10 +70,10 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     },
   },
   {
-    id: 'ship-progress',
+    key: 'ship-progress',
     name: 'Ship progress',
-    labelKey: 'habit_template.ship.name',
-    descriptionKey: 'habit_template.ship.description',
+    description: 'One hour block for execution work.',
+    isBuiltIn: true,
     habit: {
       name: 'Ship progress',
       type: 'time',
