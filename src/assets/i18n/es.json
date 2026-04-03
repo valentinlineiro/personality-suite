@@ -100,7 +100,11 @@
     "templates_title": "Plantillas",
     "templates_description": "Guarda sugerencias personalizadas aquí y reutilízalas cuando escribas un hábito similar.",
     "templates_empty": "Aún no hay plantillas personalizadas.",
-    "save_template": "Guardar plantilla"
+    "save_template": "Guardar plantilla",
+    "auto_detect": "Auto detectar",
+    "auto_detect_none": "No hay una sugerencia fiable todavía. Prueba con un nombre más descriptivo.",
+    "auto_detect_no_secondary": "Ninguna",
+    "auto_detect_applied": "Aplicado: {{primary}} + {{secondary}} ({{confidence}}% de confianza)."
   },
   "habit_template": {
     "duolingo": {

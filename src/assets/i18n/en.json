@@ -100,7 +100,11 @@
     "templates_title": "Habit templates",
     "templates_description": "Keep custom suggestions here and reuse them whenever you start typing a familiar habit name.",
     "templates_empty": "No custom templates yet.",
-    "save_template": "Save template"
+    "save_template": "Save template",
+    "auto_detect": "Auto-detect",
+    "auto_detect_none": "No confident dimension suggestion yet. Try a more descriptive name.",
+    "auto_detect_no_secondary": "None",
+    "auto_detect_applied": "Applied: {{primary}} + {{secondary}} ({{confidence}}% confidence)."
   },
   "habit_template": {
     "duolingo": {

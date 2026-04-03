@@ -14,6 +14,7 @@ import { I18nService } from '../../../core/i18n/i18n.service'
       <div class="grid gap-3 md:grid-cols-2">
         <label class="text-xs text-slate-400 uppercase tracking-[0.3em]">{{ i18n.t('habit_form.name_label') }}</label>
         <input formControlName="name" type="text"
+          (blur)="autoDetectOnNameBlur()"
           [placeholder]="i18n.t('habit_form.name_placeholder')"
           class="w-full bg-slate-800 text-white rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
 
@@ -37,7 +38,13 @@ import { I18nService } from '../../../core/i18n/i18n.service'
       </div>
 
       <div class="grid gap-3 md:grid-cols-2">
-        <label class="text-xs text-slate-400">{{ i18n.t('habit_form.dimension_primary_label') }}</label>
+        <div class="flex items-center justify-between">
+          <label class="text-xs text-slate-400">{{ i18n.t('habit_form.dimension_primary_label') }}</label>
+          <button type="button" (click)="applySuggestedDimensions()"
+            class="text-[11px] px-2 py-1 rounded-md border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-colors">
+            {{ i18n.t('settings_templates.auto_detect') }}
+          </button>
+        </div>
         <select formControlName="dimensionPrimary" class="w-full bg-slate-800 text-white rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="" disabled>{{ i18n.t('habit_form.dimension_primary_placeholder') }}</option>
           @for (d of dimensions; track d.id) {
@@ -59,6 +66,10 @@ import { I18nService } from '../../../core/i18n/i18n.service'
         {{ i18n.t('settings_templates.save_template') }}
       </button>
 
+      @if (suggestionMessage()) {
+        <p class="text-xs text-slate-400">{{ suggestionMessage() }}</p>
+      }
+
       @if (message()) {
         <p class="text-xs text-emerald-400">{{ message() }}</p>
       }
@@ -69,6 +80,7 @@ export class TemplateFormComponent {
   habitTypes: HabitType[] = ['binary', 'quantity', 'time']
   dimensions = DIMENSIONS
   message = signal('')
+  suggestionMessage = signal('')
 
   form: FormGroup
 
@@ -112,7 +124,45 @@ export class TemplateFormComponent {
       },
     })
     this.message.set(this.i18n.t('habit_form.template_saved') || 'Template saved!')
+    this.suggestionMessage.set('')
     this.form.reset({ type: 'binary' })
     setTimeout(() => this.message.set(''), 3000)
+  }
+
+  applySuggestedDimensions(): void {
+    this.applySuggestion(true)
+  }
+
+  autoDetectOnNameBlur(): void {
+    const currentPrimary = String(this.form.get('dimensionPrimary')?.value ?? '').trim()
+    if (currentPrimary) return
+    this.applySuggestion(false)
+  }
+
+  private applySuggestion(showNoSuggestionMessage: boolean): void {
+    const name = String(this.form.get('name')?.value ?? '')
+    const suggestion = this.habitTemplateService.suggestDimensions(name)
+    if (!suggestion) {
+      if (showNoSuggestionMessage) {
+        this.suggestionMessage.set(this.i18n.t('settings_templates.auto_detect_none'))
+      }
+      return
+    }
+
+    this.form.patchValue({
+      dimensionPrimary: suggestion.dimensionPrimary,
+      dimensionSecondary: suggestion.dimensionSecondary ?? '',
+    })
+    const primaryLabel = this.i18n.t(`dimensions.${suggestion.dimensionPrimary}.label`)
+    const secondaryLabel = suggestion.dimensionSecondary
+      ? this.i18n.t(`dimensions.${suggestion.dimensionSecondary}.label`)
+      : this.i18n.t('settings_templates.auto_detect_no_secondary')
+    this.suggestionMessage.set(
+      this.i18n.t('settings_templates.auto_detect_applied', {
+        primary: primaryLabel,
+        secondary: secondaryLabel,
+        confidence: suggestion.confidence,
+      }),
+    )
   }
 }
