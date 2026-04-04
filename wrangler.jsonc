@@ -1,11 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "personality-suite",
-  "main": "worker/index.ts",
+  "pages_build_output_dir": "dist/personality-suite/browser",
   "compatibility_date": "2026-04-03",
-  "observability": {
-    "enabled": true,
-  },
+  "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
     {
       "binding": "DB",
@@ -13,14 +11,6 @@
       "database_id": "0360997e-2874-493c-bc95-8c0d8224af8e",
       "migrations_dir": "migrations",
     },
-  ],
-  "assets": {
-    "directory": "dist/personality-suite/browser",
-    "not_found_handling": "single-page-application",
-  },
-  "compatibility_flags": ["nodejs_compat"],
-  "routes": [
-    { "pattern": "personality-suite.cat-gogh-studio.com", "custom_domain": true },
   ],
   "vars": {
     "GOOGLE_CLIENT_ID": "21959669050-93a985o4ngtb407kkj3de5agae9o93jk.apps.googleusercontent.com",
