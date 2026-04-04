@@ -19,6 +19,9 @@
     "not_found_handling": "single-page-application",
   },
   "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "personality-suite.cat-gogh-studio.com", "custom_domain": true },
+  ],
   "vars": {
     "GOOGLE_CLIENT_ID": "21959669050-93a985o4ngtb407kkj3de5agae9o93jk.apps.googleusercontent.com",
   },

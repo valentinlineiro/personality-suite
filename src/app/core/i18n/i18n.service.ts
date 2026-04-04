@@ -12,7 +12,12 @@ export class I18nService {
 
   async setLanguage(lang: string): Promise<void> {
     const res = await fetch(`assets/i18n/${lang}.json`)
-    if (!res.ok) throw new Error(`Language file not found: ${lang}`)
+    if (!res.ok) {
+      if (lang !== 'en') {
+        await this.setLanguage('en')
+      }
+      return
+    }
     const data = await res.json()
     this._translations.set(data)
     this.currentLang.set(lang)
