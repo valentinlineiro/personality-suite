@@ -20,6 +20,6 @@
   },
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "GOOGLE_CLIENT_ID": "",
+    "GOOGLE_CLIENT_ID": "21959669050-93a985o4ngtb407kkj3de5agae9o93jk.apps.googleusercontent.com",
   },
 }
