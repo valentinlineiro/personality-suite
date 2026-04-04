@@ -95,7 +95,13 @@
   "settings": {
     "title": "Configuración",
     "description": "Ajusta preferencias de la app, como el idioma de la interfaz.",
-    "language_label": "Idioma"
+    "language_label": "Idioma",
+    "account_signed_in": "Sesión iniciada",
+    "account_sync_active": "Tus datos se sincronizan entre dispositivos.",
+    "account_sign_out": "Cerrar sesión",
+    "account_signed_out": "Sin sesión",
+    "account_sync_hint": "Inicia sesión para sincronizar tus datos entre dispositivos.",
+    "account_sign_in_google": "Iniciar sesión con Google"
   },
   "settings_templates": {
     "templates_title": "Plantillas",

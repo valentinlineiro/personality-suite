@@ -95,7 +95,13 @@
   "settings": {
     "title": "Settings",
     "description": "Adjust app preferences such as the interface language.",
-    "language_label": "Language"
+    "language_label": "Language",
+    "account_signed_in": "Signed in",
+    "account_sync_active": "Your data syncs across devices.",
+    "account_sign_out": "Sign out",
+    "account_signed_out": "Not signed in",
+    "account_sync_hint": "Sign in to sync your data across devices.",
+    "account_sign_in_google": "Sign in with Google"
   },
   "settings_templates": {
     "templates_title": "Habit templates",

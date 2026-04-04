@@ -19,4 +19,7 @@
     "not_found_handling": "single-page-application",
   },
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "GOOGLE_CLIENT_ID": "",
+  },
 }

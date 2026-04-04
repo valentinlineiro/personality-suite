@@ -5,6 +5,7 @@ import { HabitTemplateService } from '../../habits/services/habit-template.servi
 import { HabitTemplate } from '../../habits/models/habit-template.model'
 import { I18nService } from '../../../core/i18n/i18n.service'
 import { TemplateFormComponent } from './template-form.component'
+import { AuthService } from '../../../core/auth/auth.service'
 
 @Component({
   selector: 'app-settings',
@@ -17,6 +18,28 @@ import { TemplateFormComponent } from './template-form.component'
         <p class="text-sm text-slate-500">{{ i18n.t('settings.description') }}</p>
       </div>
       <div class="px-4 space-y-6">
+        <section class="bg-slate-800/50 rounded-2xl p-4 flex items-center justify-between gap-4">
+          @if (auth.isAuthenticated()) {
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-white">{{ i18n.t('settings.account_signed_in') }}</p>
+              <p class="text-xs text-slate-400 mt-0.5">{{ i18n.t('settings.account_sync_active') }}</p>
+            </div>
+            <button (click)="auth.logout()"
+              class="shrink-0 text-sm text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-slate-700 transition-colors">
+              {{ i18n.t('settings.account_sign_out') }}
+            </button>
+          } @else {
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-white">{{ i18n.t('settings.account_signed_out') }}</p>
+              <p class="text-xs text-slate-400 mt-0.5">{{ i18n.t('settings.account_sync_hint') }}</p>
+            </div>
+            <button (click)="auth.login()"
+              class="shrink-0 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg transition-colors">
+              {{ i18n.t('settings.account_sign_in_google') }}
+            </button>
+          }
+        </section>
+
         <section>
           <p class="text-sm text-slate-400 mb-2">{{ i18n.t('settings.language_label') }}</p>
           <app-language-selector />
@@ -68,6 +91,7 @@ export class SettingsComponent {
 
   constructor(
     public i18n: I18nService,
+    public auth: AuthService,
     private habitTemplateService: HabitTemplateService,
   ) {}
 

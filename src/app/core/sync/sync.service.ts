@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core'
 import { DatabaseService } from '../db/database.service'
+import { AuthService } from '../auth/auth.service'
 import { Habit, DimensionId } from '../models/habit.model'
 import { HabitEntry } from '../models/habit-entry.model'
 import { StoredCustomTemplate } from '../../modules/habits/models/habit-template.model'
@@ -93,22 +94,15 @@ function toTemplateRow(t: StoredCustomTemplate): SyncTemplateRow {
 
 @Injectable({ providedIn: 'root' })
 export class SyncService {
-  private readonly USER_ID_KEY = 'ps_user_id'
   private readonly LAST_PULL_KEY = 'ps_last_pull'
   private readonly LAST_PUSH_KEY = 'ps_last_push'
 
   private pushTimer: ReturnType<typeof setTimeout> | null = null
 
-  constructor(private db: DatabaseService) {}
-
-  get userId(): string {
-    let id = localStorage.getItem(this.USER_ID_KEY)
-    if (!id) {
-      id = crypto.randomUUID()
-      localStorage.setItem(this.USER_ID_KEY, id)
-    }
-    return id
-  }
+  constructor(
+    private db: DatabaseService,
+    private auth: AuthService,
+  ) {}
 
   private get lastPullAt(): string {
     return localStorage.getItem(this.LAST_PULL_KEY) ?? '1970-01-01T00:00:00.000Z'
@@ -117,6 +111,13 @@ export class SyncService {
   private get lastPushAt(): Date {
     const stored = localStorage.getItem(this.LAST_PUSH_KEY)
     return stored ? new Date(stored) : new Date(0)
+  }
+
+  private get authHeaders(): Record<string, string> {
+    return {
+      'content-type': 'application/json',
+      'Authorization': `Bearer ${this.auth.token}`,
+    }
   }
 
   /** Fire-and-forget push with 500ms debounce so rapid mutations coalesce. */
@@ -129,10 +130,11 @@ export class SyncService {
   }
 
   async pull(): Promise<void> {
+    if (!this.auth.isAuthenticated()) return
     try {
       const res = await fetch('/api/sync/pull', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-user-id': this.userId },
+        headers: this.authHeaders,
         body: JSON.stringify({ since: this.lastPullAt }),
       })
       if (!res.ok) return
@@ -145,6 +147,7 @@ export class SyncService {
   }
 
   private async doPush(): Promise<void> {
+    if (!this.auth.isAuthenticated()) return
     const since = this.lastPushAt
     try {
       const [habits, entries, templates] = await Promise.all([
@@ -163,7 +166,7 @@ export class SyncService {
 
       const res = await fetch('/api/sync/push', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-user-id': this.userId },
+        headers: this.authHeaders,
         body: JSON.stringify(payload),
       })
       if (res.ok) {
