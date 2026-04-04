@@ -1,27 +1,19 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode, APP_INITIALIZER } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode, provideAppInitializer, inject } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 import { I18nService } from './core/i18n/i18n.service';
 import { HabitTemplateService } from './modules/habits/services/habit-template.service';
+import { SyncService } from './core/sync/sync.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (i18n: I18nService) => () => i18n.init(),
-      deps: [I18nService],
-      multi: true,
-    },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (templates: HabitTemplateService) => () => templates.init(),
-      deps: [HabitTemplateService],
-      multi: true,
-    },
+    provideAppInitializer(() => inject(I18nService).init()),
+    provideAppInitializer(() => inject(HabitTemplateService).init()),
+    provideAppInitializer(() => { inject(SyncService).pull(); }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

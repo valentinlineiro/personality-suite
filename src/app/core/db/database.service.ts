@@ -73,5 +73,58 @@ export class DatabaseService extends Dexie {
           }
         }
       })
+    this.version(4)
+      .stores({
+        habits: '++id, syncId, name, type, dimensionPrimary, dimensionSecondary, createdAt, archivedAt',
+        entries: '++id, syncId, syncHabitId, habitId, date, &[habitId+date], completed, createdAt',
+        customTemplates: '++id, syncId, name, createdAt',
+      })
+      .upgrade(async tx => {
+        const habitsTable = tx.table<Habit, number>('habits')
+        const habits = await habitsTable.toArray()
+        const habitSyncIdMap = new Map<number, string>()
+        for (const habit of habits) {
+          const syncId = habit.syncId ?? crypto.randomUUID()
+          habitSyncIdMap.set(habit.id!, syncId)
+          if (!habit.syncId) await habitsTable.update(habit.id!, { syncId })
+        }
+
+        const entriesTable = tx.table<HabitEntry, number>('entries')
+        const entries = await entriesTable.toArray()
+        for (const entry of entries) {
+          const updates: Partial<HabitEntry> = {}
+          if (!entry.syncId) updates.syncId = crypto.randomUUID()
+          if (!entry.syncHabitId) updates.syncHabitId = habitSyncIdMap.get(entry.habitId)
+          if (Object.keys(updates).length > 0) await entriesTable.update(entry.id!, updates)
+        }
+
+        const templatesTable = tx.table<StoredCustomTemplate, number>('customTemplates')
+        const templates = await templatesTable.toArray()
+        for (const template of templates) {
+          if (!template.syncId) await templatesTable.update(template.id!, { syncId: crypto.randomUUID() })
+        }
+      })
+    this.version(5)
+      .stores({
+        habits: '++id, syncId, updatedAt, name, type, dimensionPrimary, dimensionSecondary, createdAt, archivedAt',
+        entries: '++id, syncId, syncHabitId, updatedAt, habitId, date, &[habitId+date], completed, createdAt',
+        customTemplates: '++id, syncId, updatedAt, name, createdAt',
+      })
+      .upgrade(async tx => {
+        const habitsTable = tx.table<Habit, number>('habits')
+        for (const habit of await habitsTable.toArray()) {
+          if (!habit.updatedAt) await habitsTable.update(habit.id!, { updatedAt: habit.createdAt })
+        }
+
+        const entriesTable = tx.table<HabitEntry, number>('entries')
+        for (const entry of await entriesTable.toArray()) {
+          if (!entry.updatedAt) await entriesTable.update(entry.id!, { updatedAt: entry.createdAt })
+        }
+
+        const templatesTable = tx.table<StoredCustomTemplate, number>('customTemplates')
+        for (const template of await templatesTable.toArray()) {
+          if (!template.updatedAt) await templatesTable.update(template.id!, { updatedAt: template.createdAt })
+        }
+      })
   }
 }

@@ -17,9 +17,12 @@ export interface HabitTemplate {
 
 export interface StoredCustomTemplate {
   id?: number
+  syncId?: string
   name: string
   description?: string
   createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date
   habit: {
     name: string
     type: HabitType

@@ -2,30 +2,38 @@ import { Injectable } from '@angular/core'
 import { DatabaseService } from '../../../core/db/database.service'
 import { Habit } from '../../../core/models/habit.model'
 import { HabitEntry } from '../../../core/models/habit-entry.model'
+import { SyncService } from '../../../core/sync/sync.service'
 import { toDateString } from '../../../core/utils/date.utils'
 
 @Injectable({ providedIn: 'root' })
 export class HabitsService {
-  constructor(private db: DatabaseService) {}
+  constructor(
+    private db: DatabaseService,
+    private sync: SyncService,
+  ) {}
 
   getActiveHabits(): Promise<Habit[]> {
-    return this.db.habits.filter(h => !h.archivedAt).toArray()
+    return this.db.habits.filter(h => !h.archivedAt && !h.deletedAt).toArray()
   }
 
   getArchivedHabits(): Promise<Habit[]> {
-    return this.db.habits.filter(h => !!h.archivedAt).toArray()
+    return this.db.habits.filter(h => !!h.archivedAt && !h.deletedAt).toArray()
   }
 
   getHabitById(id: number): Promise<Habit | undefined> {
     return this.db.habits.get(id)
   }
 
-  createHabit(data: Omit<Habit, 'id' | 'createdAt'>): Promise<number> {
-    return this.db.habits.add({ ...data, createdAt: new Date() })
+  async createHabit(data: Omit<Habit, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
+    const now = new Date()
+    const id = await this.db.habits.add({ ...data, syncId: crypto.randomUUID(), createdAt: now, updatedAt: now })
+    this.sync.push()
+    return id
   }
 
   async updateHabit(id: number, data: Partial<Habit>): Promise<void> {
-    await this.db.habits.update(id, data)
+    await this.db.habits.update(id, { ...data, updatedAt: new Date() })
+    this.sync.push()
   }
 
   async archiveHabit(id: number): Promise<void> {
@@ -33,21 +41,28 @@ export class HabitsService {
   }
 
   async deleteHabit(id: number): Promise<void> {
+    const now = new Date()
     await this.db.transaction('rw', this.db.habits, this.db.entries, async () => {
-      await this.db.entries.where('habitId').equals(id).delete()
-      await this.db.habits.delete(id)
+      await this.db.habits.update(id, { deletedAt: now, updatedAt: now })
+      const entries = await this.db.entries.where('habitId').equals(id).toArray()
+      for (const entry of entries) {
+        if (entry.id != null) {
+          await this.db.entries.update(entry.id, { deletedAt: now, updatedAt: now })
+        }
+      }
     })
+    this.sync.push()
   }
 
   getTodayEntries(date: string): Promise<HabitEntry[]> {
-    return this.db.entries.where('date').equals(date).toArray()
+    return this.db.entries.where('date').equals(date).filter(e => !e.deletedAt).toArray()
   }
 
   getEntriesForPeriod(habitId: number, from: string, to: string): Promise<HabitEntry[]> {
     return this.db.entries
       .where('date')
       .between(from, to, true, true)
-      .filter(e => e.habitId === habitId)
+      .filter(e => e.habitId === habitId && !e.deletedAt)
       .toArray()
   }
 
@@ -61,7 +76,7 @@ export class HabitsService {
     return this.db.entries
       .where('date')
       .between(from, to, true, true)
-      .filter(e => idSet.has(e.habitId))
+      .filter(e => idSet.has(e.habitId) && !e.deletedAt)
       .toArray()
   }
 
@@ -71,16 +86,22 @@ export class HabitsService {
       .first()
 
     if (existing?.id != null) {
-      await this.db.entries.update(existing.id, data)
+      await this.db.entries.update(existing.id, { ...data, updatedAt: new Date() })
     } else {
+      const habit = await this.db.habits.get(habitId)
+      const now = new Date()
       await this.db.entries.add({
         habitId,
         date,
         completed: false,
-        createdAt: new Date(),
+        createdAt: now,
+        updatedAt: now,
+        syncId: crypto.randomUUID(),
+        syncHabitId: habit?.syncId,
         ...data,
       })
     }
+    this.sync.push()
   }
 
   async getStreaks(habits: Habit[]): Promise<Map<number, number>> {
@@ -91,6 +112,7 @@ export class HabitsService {
     const entries = await this.db.entries
       .where('habitId')
       .anyOf(habitIds)
+      .filter(e => !e.deletedAt)
       .toArray()
 
     const entriesByHabit = new Map<number, HabitEntry[]>()
@@ -109,7 +131,10 @@ export class HabitsService {
 
   async getStreak(habit: Habit): Promise<number> {
     if (habit.id == null) return 0
-    const entries = await this.db.entries.where('habitId').equals(habit.id).toArray()
+    const entries = await this.db.entries
+      .where('habitId').equals(habit.id)
+      .filter(e => !e.deletedAt)
+      .toArray()
     return this.calculateStreak(habit, entries)
   }
 

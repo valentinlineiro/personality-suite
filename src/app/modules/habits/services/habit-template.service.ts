@@ -2,6 +2,7 @@ import { Injectable, signal, computed } from '@angular/core'
 import { HabitTemplate } from '../models/habit-template.model'
 import { DatabaseService } from '../../../core/db/database.service'
 import { DimensionId, HabitType } from '../../../core/models/habit.model'
+import { SyncService } from '../../../core/sync/sync.service'
 
 export interface DimensionSuggestion {
   dimensionPrimary: DimensionId
@@ -14,10 +15,13 @@ export class HabitTemplateService {
   private customTemplates = signal<HabitTemplate[]>([])
   readonly templates = computed(() => this.customTemplates())
 
-  constructor(private db: DatabaseService) {}
+  constructor(
+    private db: DatabaseService,
+    private sync: SyncService,
+  ) {}
 
   async init(): Promise<void> {
-    const stored = await this.db.customTemplates.toArray()
+    const stored = await this.db.customTemplates.filter(t => !t.deletedAt).toArray()
     const custom: HabitTemplate[] = stored.map(t => ({
       key: `custom-${t.id}`,
       name: t.name,
@@ -40,10 +44,13 @@ export class HabitTemplateService {
       dimensionSecondary: DimensionId | null
     }
   }): Promise<void> {
+    const now = new Date()
     const id = await this.db.customTemplates.add({
       name: data.name,
       description: data.description,
-      createdAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
+      syncId: crypto.randomUUID(),
       habit: data.habit,
     })
     this.customTemplates.update(list => [
@@ -56,11 +63,14 @@ export class HabitTemplateService {
         habit: data.habit,
       },
     ])
+    this.sync.push()
   }
 
   async deleteCustomTemplate(dbId: number): Promise<void> {
-    await this.db.customTemplates.delete(dbId)
+    const now = new Date()
+    await this.db.customTemplates.update(dbId, { deletedAt: now, updatedAt: now })
     this.customTemplates.update(list => list.filter(t => t.dbId !== dbId))
+    this.sync.push()
   }
 
   suggestDimensions(name: string): DimensionSuggestion | null {

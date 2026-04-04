@@ -12,6 +12,7 @@ export type DimensionId =
 
 export interface Habit {
   id?: number
+  syncId?: string
   name: string
   type: HabitType
   unit?: string
@@ -19,5 +20,7 @@ export interface Habit {
   dimensionPrimary: DimensionId | null
   dimensionSecondary: DimensionId | null
   createdAt: Date
+  updatedAt: Date
   archivedAt?: Date
+  deletedAt?: Date
 }
