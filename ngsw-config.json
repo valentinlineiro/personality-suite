@@ -19,7 +19,8 @@
           "/index.html",
           "/manifest.webmanifest",
           "/*.css",
-          "/*.js"
+          "/*.js",
+          "/assets/i18n/*.json"
         ]
       }
     },
