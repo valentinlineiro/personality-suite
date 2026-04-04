@@ -220,7 +220,7 @@ export class TodayViewComponent implements OnInit {
     this.rows.update(rows =>
       rows.map(r =>
         r.habit.id === row.habit.id
-          ? { ...r, entry: { ...(r.entry ?? { habitId: row.habit.id!, date: this.today, createdAt: new Date() }), completed: newCompleted } }
+          ? { ...r, entry: { ...(r.entry ?? { habitId: row.habit.id!, date: this.today, createdAt: new Date(), updatedAt: new Date() }), completed: newCompleted } }
           : r
       )
     )
@@ -241,7 +241,7 @@ export class TodayViewComponent implements OnInit {
     this.rows.update(rows =>
       rows.map(r =>
         r.habit.id === row.habit.id
-          ? { ...r, entry: { ...(r.entry ?? { habitId: row.habit.id!, date: this.today, createdAt: new Date() }), value, completed } }
+          ? { ...r, entry: { ...(r.entry ?? { habitId: row.habit.id!, date: this.today, createdAt: new Date(), updatedAt: new Date() }), value, completed } }
           : r
       )
     )
